@@ -1,11 +1,27 @@
-export default function Page() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900 capitalize">animais</h1>
-      <div className="bg-white rounded-lg border p-8 text-center text-gray-400">
-        <p className="text-lg">Módulo em desenvolvimento — Etapa 2+</p>
-        <p className="text-sm mt-2">Será implementado nas próximas etapas do roadmap.</p>
-      </div>
-    </div>
-  );
+import { prisma } from "@/lib/prisma";
+import { AnimaisManager } from "./_components/animais-manager";
+
+export default async function AnimaisPage() {
+  const [animais, lotes] = await Promise.all([
+    prisma.animal.findMany({
+      where: { status: "ATIVO" },
+      orderBy: { brinco: "asc" },
+      include: {
+        pertinencias: {
+          where: { dataFim: null },
+          include: { lote: true },
+        },
+        pesagens: {
+          orderBy: { dataPesagem: "desc" },
+          take: 1,
+        },
+      },
+    }),
+    prisma.lote.findMany({
+      where: { ativo: true },
+      orderBy: { nome: "asc" },
+      include: { propriedade: { select: { nome: true } } },
+    }),
+  ]);
+  return <AnimaisManager initialAnimais={animais} lotes={lotes} />;
 }

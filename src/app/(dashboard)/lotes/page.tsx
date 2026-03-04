@@ -1,11 +1,17 @@
-export default function Page() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900 capitalize">lotes</h1>
-      <div className="bg-white rounded-lg border p-8 text-center text-gray-400">
-        <p className="text-lg">Módulo em desenvolvimento — Etapa 2+</p>
-        <p className="text-sm mt-2">Será implementado nas próximas etapas do roadmap.</p>
-      </div>
-    </div>
-  );
+import { prisma } from "@/lib/prisma";
+import { LotesManager } from "./_components/lotes-manager";
+
+export default async function LotesPage() {
+  const [lotes, propriedades] = await Promise.all([
+    prisma.lote.findMany({
+      where: { ativo: true },
+      orderBy: { nome: "asc" },
+      include: {
+        propriedade: true,
+        pertinencias: { where: { dataFim: null }, select: { id: true } },
+      },
+    }),
+    prisma.propriedade.findMany({ where: { ativa: true }, orderBy: { nome: "asc" } }),
+  ]);
+  return <LotesManager initialLotes={lotes} propriedades={propriedades} />;
 }
