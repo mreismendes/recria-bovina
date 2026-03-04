@@ -1,24 +1,23 @@
-/**
- * GET  /api/products  — Lista produtos (suplementos e medicamentos)
- * POST /api/products  — Cadastra produto
- * Implementação completa: Etapa 2
- */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { produtoSchema } from "@/lib/validations";
+import type { TipoProduto } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const tipo  = searchParams.get("tipo");
-    const grupo = searchParams.get("grupo"); // "suplemento" | "medicamento"
+    const tipo  = searchParams.get("tipo") as TipoProduto | null;
+    const grupo = searchParams.get("grupo");
+
+    const suplementoTipos: TipoProduto[] = ["SUPLEMENTO_MINERAL","SUPLEMENTO_PROTEICO","SUPLEMENTO_ENERGETICO","SUPLEMENTO_MISTO"];
+    const medicamentoTipos: TipoProduto[] = ["VERMIFUGO","CARRAPATICIDA","VACINA","ANTIBIOTICO","VITAMINA","OUTRO_MEDICAMENTO"];
 
     const produtos = await prisma.produto.findMany({
       where: {
         ativo: true,
-        ...(tipo && { tipo: tipo as never }),
-        ...(grupo === "suplemento" && { tipo: { in: ["SUPLEMENTO_MINERAL","SUPLEMENTO_PROTEICO","SUPLEMENTO_ENERGETICO","SUPLEMENTO_MISTO"] } }),
-        ...(grupo === "medicamento" && { tipo: { in: ["VERMIFUGO","CARRAPATICIDA","VACINA","ANTIBIOTICO","VITAMINA","OUTRO_MEDICAMENTO"] } }),
+        ...(tipo && { tipo }),
+        ...(grupo === "suplemento" && { tipo: { in: suplementoTipos } }),
+        ...(grupo === "medicamento" && { tipo: { in: medicamentoTipos } }),
       },
       orderBy: { nome: "asc" },
     });

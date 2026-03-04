@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { Users, TrendingUp, Package, AlertTriangle } from "lucide-react";
 
 async function getDashboardStats() {

@@ -7,7 +7,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { animalSchema } from "@/lib/validations";
-import { getAnimaisAtivosNoLoteNaData } from "@/lib/queries";
 
 export async function GET(req: NextRequest) {
   try {
@@ -38,7 +37,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, data: animais });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: "Erro ao buscar animais" }, { status: 500 });
   }
 }
@@ -100,7 +99,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, data: animal }, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: "Erro ao cadastrar animal" }, { status: 500 });
   }
 }

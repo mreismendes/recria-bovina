@@ -4,7 +4,7 @@
  * Execução: npm run db:seed
  */
 
-import { PrismaClient, TipoProduto, Sexo, TipoEntrada, TipoPesagem, TipoMovimentacao } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { addDays, subDays } from "date-fns";
 

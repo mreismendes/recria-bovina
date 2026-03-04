@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Search, Beef, Calendar, Weight } from "lucide-react";
+import { Plus, Pencil, Search, Beef } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +15,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Separator } from "@/components/ui/separator";
 import { animalSchema, type AnimalFormData } from "@/lib/validations";
 import { animaisApi } from "@/lib/api";
-import { formatDate, formatPeso, formatGMD, formatCurrency, SEXO_LABEL, TIPO_ENTRADA_LABEL, calcularGMD, diasEntreDatas } from "@/lib/utils";
+import { formatPeso, formatCurrency, SEXO_LABEL, TIPO_ENTRADA_LABEL } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 type Lote = { id: string; nome: string; propriedade: { nome: string } };
@@ -116,16 +116,6 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
   }
   function getPesoAtual(animal: Animal) {
     return animal.pesagens[0]?.pesoKg;
-  }
-  function getGMD(animal: Animal) {
-    if (animal.pesagens.length === 0) return null;
-    const pesoAtual = animal.pesagens[0].pesoKg;
-    const dias = diasEntreDatas(new Date(animal.pesagens[0].dataPesagem.toString()), new Date());
-    return calcularGMD(animal.pesoEntradaKg, pesoAtual, diasEntreDatas(
-      // use first pesagem date as proxy for entry
-      new Date(animal.pesagens[animal.pesagens.length - 1]?.dataPesagem?.toString() ?? Date.now()),
-      new Date(animal.pesagens[0]?.dataPesagem?.toString() ?? Date.now())
-    ) || 1);
   }
 
   return (

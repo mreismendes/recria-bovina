@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Pencil, Trash2, Package, Wheat, Pill } from "lucide-react";
@@ -102,7 +102,7 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
     } catch (e: any) { setDeleting(null); setError(e.message); }
   }
 
-  const tabs: { key: Tab; label: string; icon: any }[] = [
+  const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
     { key: "todos", label: "Todos", icon: Package },
     { key: "suplemento", label: "Suplementos", icon: Wheat },
     { key: "medicamento", label: "Medicamentos", icon: Pill },
