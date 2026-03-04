@@ -1,0 +1,48 @@
+# ============================================================
+# Docker Compose — Recria Bovina
+# ============================================================
+# Desenvolvimento: apenas PostgreSQL via Docker
+# Produção: descomentar o serviço 'app'
+# ============================================================
+
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: recria_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: senha123
+      POSTGRES_DB: recria_bovina
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Serviço da aplicação (produção) ────────────────────────
+  # Descomente para deploy em servidor próprio
+  #
+  # app:
+  #   build: .
+  #   container_name: recria_app
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     DATABASE_URL: postgresql://postgres:senha123@postgres:5432/recria_bovina
+  #     NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+  #     NEXTAUTH_URL: ${NEXTAUTH_URL}
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+volumes:
+  postgres_data:

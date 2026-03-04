@@ -1,0 +1,455 @@
+// This is your Prisma schema file
+// Gestão de Rebanho Bovino — Recria Individual
+// Etapa 1: Schema completo
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(OPERADOR)
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  GESTOR
+  OPERADOR
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROPRIEDADE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Propriedade {
+  id        String  @id @default(cuid())
+  nome      String
+  cnpjCpf   String?
+  municipio String?
+  estado    String?
+  ativa     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lotes    Lote[]
+  piquetes Piquete[]
+
+  @@map("propriedades")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOTE
+// Agrupamento de gestão. Um animal pertence a exatamente um lote por vez.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Lote {
+  id            String      @id @default(cuid())
+  nome          String
+  descricao     String?
+  propriedadeId String
+  propriedade   Propriedade @relation(fields: [propriedadeId], references: [id])
+  ativo         Boolean     @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pertinencias            PertinenciaLote[]
+  apontamentosSuplemento  ApontamentoSuplemento[]
+  apontamentosMedicamento ApontamentoMedicamento[]
+
+  @@map("lotes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PIQUETE
+// Localização física. Independente do lote.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Piquete {
+  id            String      @id @default(cuid())
+  nome          String
+  areaHectares  Float?
+  propriedadeId String
+  propriedade   Propriedade @relation(fields: [propriedadeId], references: [id])
+  ativo         Boolean     @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("piquetes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANIMAL
+// Unidade mínima de gestão. Identificado por brinco (obrigatório) e/ou RFID.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Animal {
+  id             String       @id @default(cuid())
+  brinco         String       @unique
+  rfid           String?      @unique
+  nome           String?
+  raca           String?
+  sexo           Sexo
+  dataNascimento DateTime?
+  pesoEntradaKg  Float        // peso registrado na entrada — imutável após criação
+  custoAquisicao Float        @default(0)
+  tipoEntrada    TipoEntrada
+  origem         String?      // propriedade / municipio de origem
+  gtaEntrada     String?
+  status         AnimalStatus @default(ATIVO)
+  observacoes    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pertinencias    PertinenciaLote[]
+  pesagens        Pesagem[]
+  rasteiosSuplem  RateioSuplemento[]
+  rateiosMed      RateioMedicamento[]
+  carencias       CarenciaMedicamento[]
+  saida           Saida?
+  movimentacoes   Movimentacao[]
+
+  @@map("animais")
+}
+
+enum Sexo {
+  MACHO
+  FEMEA
+}
+
+enum TipoEntrada {
+  COMPRA_EXTERNA
+  NASCIMENTO_PROPRIO
+  TRANSFERENCIA_INTERNA
+}
+
+enum AnimalStatus {
+  ATIVO
+  INATIVO
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PERTINENCIA_LOTE
+// Intervalo de datas em que um animal pertence a um lote.
+// data_fim = null  →  pertinência ativa (animal está neste lote agora)
+// Regra: um animal pode ter apenas UMA pertinência com data_fim = null.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PertinenciaLote {
+  id         String    @id @default(cuid())
+  animalId   String
+  animal     Animal    @relation(fields: [animalId], references: [id])
+  loteId     String
+  lote       Lote      @relation(fields: [loteId], references: [id])
+  dataInicio DateTime
+  dataFim    DateTime? // null = currently active
+  motivo     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([animalId, dataFim])
+  @@index([loteId, dataInicio, dataFim])
+  @@map("pertinencias_lote")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PESAGEM
+// Cada pesagem é sempre individual por animal.
+// Pesagem de entrada = tipo ENTRADA, criada automaticamente no cadastro do animal.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Pesagem {
+  id          String      @id @default(cuid())
+  animalId    String
+  animal      Animal      @relation(fields: [animalId], references: [id])
+  dataPesagem DateTime
+  pesoKg      Float
+  tipo        TipoPesagem @default(PERIODICA)
+  jejumHoras  Float?
+  responsavel String?
+  observacoes String?
+
+  // Calculated fields (stored for query performance)
+  gmdPeriodo  Float? // kg/dia desde a pesagem anterior
+  diasPeriodo Int?   // dias desde a pesagem anterior
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([animalId, dataPesagem]) // RN-02: no duplicate date per animal
+  @@index([animalId, dataPesagem])
+  @@map("pesagens")
+}
+
+enum TipoPesagem {
+  ENTRADA
+  PERIODICA
+  SAIDA
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRODUTO
+// Catálogo unificado de suplementos e medicamentos.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Produto {
+  id               String      @id @default(cuid())
+  nome             String
+  tipo             TipoProduto
+  principioAtivo   String?     // medicamentos
+  viaAdministracao String?     // medicamentos
+  carenciaDias     Int?        // medicamentos — padrão (editável no apontamento)
+  unidadeMedida    String      @default("kg")
+  precoUnitario    Float?
+  ativo            Boolean     @default(true)
+  observacoes      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  apontamentosSuplemento  ApontamentoSuplemento[]
+  apontamentosMedicamento ApontamentoMedicamento[]
+
+  @@map("produtos")
+}
+
+enum TipoProduto {
+  SUPLEMENTO_MINERAL
+  SUPLEMENTO_PROTEICO
+  SUPLEMENTO_ENERGETICO
+  SUPLEMENTO_MISTO
+  VERMIFUGO
+  CARRAPATICIDA
+  VACINA
+  ANTIBIOTICO
+  VITAMINA
+  OUTRO_MEDICAMENTO
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// APONTAMENTO_SUPLEMENTO
+// Consumo de suplemento registrado ao nível do lote.
+// O custo é distribuído por média simples entre as cabeças ativas na data.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ApontamentoSuplemento {
+  id               String  @id @default(cuid())
+  loteId           String
+  lote             Lote    @relation(fields: [loteId], references: [id])
+  produtoId        String
+  produto          Produto @relation(fields: [produtoId], references: [id])
+  dataApontamento  DateTime
+  quantidadeTotal  Float   // total fornecido (kg)
+  custoTotal       Float   // R$ total
+  modoFornecimento String?
+
+  // Snapshot do denominador no momento do apontamento
+  cabecasAtivas  Int   // número de animais ativos no lote na dataApontamento
+  custoPerCapita Float // custoTotal / cabecasAtivas
+
+  observacoes String?
+  estornado   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rateios RateioSuplemento[]
+
+  @@index([loteId, dataApontamento])
+  @@map("apontamentos_suplemento")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RATEIO_SUPLEMENTO
+// Linha de custo individual gerada pelo apontamento de suplemento.
+// Um registro por animal ativo no lote na data do apontamento.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model RateioSuplemento {
+  id            String                @id @default(cuid())
+  apontamentoId String
+  apontamento   ApontamentoSuplemento @relation(fields: [apontamentoId], references: [id])
+  animalId      String
+  animal        Animal                @relation(fields: [animalId], references: [id])
+  valorRateio   Float                 // = custoPerCapita do apontamento
+
+  createdAt DateTime @default(now())
+
+  @@index([animalId])
+  @@index([apontamentoId])
+  @@map("rateios_suplemento")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// APONTAMENTO_MEDICAMENTO
+// Consumo de medicamento registrado ao nível do lote.
+// Mesma lógica de rateio do suplemento + controle de carência por animal.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ApontamentoMedicamento {
+  id                  String   @id @default(cuid())
+  loteId              String
+  lote                Lote     @relation(fields: [loteId], references: [id])
+  produtoId           String
+  produto             Produto  @relation(fields: [produtoId], references: [id])
+  dataApontamento     DateTime
+  doseTotalAplicada   Float
+  unidadeDose         String   @default("mL")
+  custoTotal          Float
+  loteProduto         String?  // lote do fabricante
+  validade            DateTime?
+  carenciaDias        Int      // pode diferir do padrão do produto
+  cabecasAtivas       Int
+  custoPerCapita      Float
+  responsavelTecnico  String?
+  crmv                String?
+  observacoes         String?
+  estornado           Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rateios   RateioMedicamento[]
+  carencias CarenciaMedicamento[]
+
+  @@index([loteId, dataApontamento])
+  @@map("apontamentos_medicamento")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RATEIO_MEDICAMENTO
+// Linha de custo individual gerada pelo apontamento de medicamento.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model RateioMedicamento {
+  id            String                 @id @default(cuid())
+  apontamentoId String
+  apontamento   ApontamentoMedicamento @relation(fields: [apontamentoId], references: [id])
+  animalId      String
+  animal        Animal                 @relation(fields: [animalId], references: [id])
+  valorRateio   Float
+
+  createdAt DateTime @default(now())
+
+  @@index([animalId])
+  @@index([apontamentoId])
+  @@map("rateios_medicamento")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CARENCIA_MEDICAMENTO
+// Período de carência por animal por medicamento aplicado.
+// Bloqueia saída definitiva (P01.3) enquanto ativa.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CarenciaMedicamento {
+  id            String                 @id @default(cuid())
+  animalId      String
+  animal        Animal                 @relation(fields: [animalId], references: [id])
+  apontamentoId String
+  apontamento   ApontamentoMedicamento @relation(fields: [apontamentoId], references: [id])
+  dataInicio    DateTime
+  dataFim       DateTime               // dataApontamento + carenciaDias
+  ativa         Boolean                @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@index([animalId, ativa])
+  @@index([dataFim])
+  @@map("carencias_medicamento")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SAIDA
+// Registro de baixa do animal (venda, transferência, morte, descarte).
+// Contém snapshot econômico final.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Saida {
+  id                  String    @id @default(cuid())
+  animalId            String    @unique
+  animal              Animal    @relation(fields: [animalId], references: [id])
+  dataSaida           DateTime
+  tipoSaida           TipoSaida
+  pesoSaidaKg         Float?
+  valorVenda          Float?    // R$ total recebido
+  comprador           String?
+  cnpjCpf             String?
+  municipioDestino    String?
+  gtaSaida            String?
+  causaMorte          String?
+
+  // Snapshot econômico calculado no momento da saída
+  custoTotalAcumulado Float     // custo aquisição + rateios suplemento + rateios med
+  resultadoLiquido    Float?    // valorVenda - custoTotalAcumulado
+  gmdTotal            Float?    // (pesoSaida - pesoEntrada) / diasNaRecria
+  diasNaRecria        Int?
+  arrobaProduzida     Float?    // (pesoSaida - pesoEntrada) / 15
+  custoPorArroba      Float?    // custoTotalAcumulado / arrobaProduzida
+
+  observacoes String?
+  estornada   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("saidas")
+}
+
+enum TipoSaida {
+  VENDA
+  TRANSFERENCIA_EXTERNA
+  MORTE
+  DESCARTE
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MOVIMENTACAO
+// Log de auditoria de todas as movimentações internas.
+// Complementa o histórico de PertinenciaLote com contexto.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Movimentacao {
+  id               String           @id @default(cuid())
+  animalId         String
+  animal           Animal           @relation(fields: [animalId], references: [id])
+  loteOrigemId     String?
+  loteDestinoId    String?
+  dataMovimentacao DateTime
+  tipo             TipoMovimentacao
+  motivo           String?
+  observacoes      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([animalId, dataMovimentacao])
+  @@map("movimentacoes")
+}
+
+enum TipoMovimentacao {
+  ENTRADA_SISTEMA   // cadastro inicial
+  ENTRADA_LOTE      // movimentação interna — chegada
+  SAIDA_LOTE        // movimentação interna — partida
+  SAIDA_SISTEMA     // baixa definitiva
+  ESTORNO_SAIDA     // reativação por estorno
+}
