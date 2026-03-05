@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const lotes = await prisma.lote.findMany({
       where: {
         ...(ativoFilter !== undefined && { ativo: ativoFilter }),
-        ...(propIds.length > 0 && { contratoId: { in: contratoIds } }),
+        ...(contratoIds.length > 0 && { contratoId: { in: contratoIds } }),
       },
       include: {
         contrato: { select: { nomeFazenda: true } },

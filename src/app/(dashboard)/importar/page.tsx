@@ -22,6 +22,7 @@ export default async function ImportarPage() {
       existingLotes={lotes.map((l) => ({ nome: l.nome, contrato: l.contrato.idContrato }))}
       existingBrincos={animais.map((a) => a.brinco)}
       existingRfids={animais.filter((a) => a.rfid).map((a) => a.rfid!)}
+      existingPesagemKeys={pesagens.map((p) => `${p.animalId}|${p.dataPesagem.toISOString().split("T")[0]}`)}
     />
   );
 }
