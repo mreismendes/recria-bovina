@@ -91,7 +91,7 @@ model Animal {
   raca           String?
   sexo           Sexo
   dataNascimento DateTime?
-  dataEntrada    DateTime     // data de entrada operacional — usada para diasNaRecria e GMD
+  dataEntrada    DateTime     @default(now()) // data de entrada operacional — usada para diasNaRecria e GMD
   pesoEntradaKg  Float        // peso registrado na entrada — imutável após criação
   custoAquisicao Float        @default(0)
   tipoEntrada    TipoEntrada
