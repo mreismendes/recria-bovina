@@ -55,7 +55,6 @@ type ImportResult = {
   animais?: {
     criados: { brinco: string; lote: string; contrato: string }[];
     pulados: { brinco: string; motivo: string }[];
-    lotesCriados?: string[];
     lotesCriados: string[];
   };
   pesagens?: {

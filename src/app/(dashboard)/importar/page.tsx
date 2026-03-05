@@ -13,8 +13,17 @@ export default async function ImportarPage() {
       include: { contrato: { select: { idContrato: true, nomeFazenda: true } } },
     }),
     prisma.animal.findMany({ select: { brinco: true, rfid: true } }),
-    prisma.pesagem.findMany({ select: { animalId: true, dataPesagem: true } }),
+    prisma.pesagem.findMany({
+      select: {
+        animal: { select: { brinco: true } },
+        dataPesagem: true,
+      },
+    }),
   ]);
+
+  const existingPesagemKeys = pesagens.map(
+    (p) => `${p.animal.brinco.toLowerCase()}|${p.dataPesagem.toISOString().split("T")[0]}`
+  );
 
   return (
     <ImportManager
@@ -22,6 +31,7 @@ export default async function ImportarPage() {
       existingLotes={lotes.map((l) => ({ nome: l.nome, contrato: l.contrato.idContrato }))}
       existingBrincos={animais.map((a) => a.brinco)}
       existingRfids={animais.filter((a) => a.rfid).map((a) => a.rfid!)}
+      existingPesagemKeys={existingPesagemKeys}
     />
   );
 }
