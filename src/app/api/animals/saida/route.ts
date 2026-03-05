@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { differenceInDays } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 
 // Schema inline — mais restritivo que o genérico (peso individual por animal)
 import { z } from "zod";
@@ -70,31 +71,44 @@ export async function POST(req: NextRequest) {
       forcarSaidaComCarencia,
     } = parsed.data;
 
-    const dataSaidaDate = new Date(dataSaida);
-    const qtdAnimais = animaisInput.length;
-
-    // Valor de venda proporcional por cabeça (se venda em lote)
-    const valorPorCabeca =
-      tipoSaida === "VENDA" && valorVendaTotal ? valorVendaTotal / qtdAnimais : null;
+    const dataSaidaDate = parseLocalDate(dataSaida);
 
     const resultados = await prisma.$transaction(async (tx) => {
-      const processados = [];
+      // ── Pass 1: identify eligible animals and block ineligible ones ──
+      type EligibleAnimal = {
+        animalId: string;
+        brinco: string;
+        pesoSaidaKg: number | null | undefined;
+        pesoEntradaKg: number;
+        dataEntrada: Date;
+        custoAquisicao: number;
+      };
+
+      const eligible: EligibleAnimal[] = [];
       const bloqueados: { animalId: string; brinco: string; motivo: string }[] = [];
 
       for (const { animalId, pesoSaidaKg } of animaisInput) {
-        // Buscar animal com dados necessários
         const animal = await tx.animal.findUnique({
           where: { id: animalId },
           include: {
-            pesagens: { orderBy: { dataPesagem: "asc" }, take: 1 },
-            saida: true,
+            saidas: { where: { estornada: false } },
           },
         });
 
         if (!animal || animal.status !== "ATIVO") continue;
-        if (animal.saida) continue; // já tem saída registrada
+        if (animal.saidas.length > 0) continue; // já tem saída ativa (não estornada)
 
-        // ── Verificar carência ativa ──
+        // Validar cronologia: saída deve ser >= data de entrada do animal
+        if (dataSaidaDate < animal.dataEntrada) {
+          bloqueados.push({
+            animalId,
+            brinco: animal.brinco,
+            motivo: "Data de saída anterior à data de entrada do animal",
+          });
+          continue;
+        }
+
+        // Verificar carência ativa
         if (tipoSaida === "VENDA" && !forcarSaidaComCarencia) {
           const carenciasAtivas = await tx.carenciaMedicamento.findMany({
             where: {
@@ -107,38 +121,51 @@ export async function POST(req: NextRequest) {
 
           if (carenciasAtivas.length > 0) {
             const meds = carenciasAtivas.map((c) => c.apontamento.produto.nome).join(", ");
-            bloqueados.push({
-              animalId,
-              brinco: animal.brinco,
-              motivo: `Carência ativa: ${meds}`,
-            });
+            bloqueados.push({ animalId, brinco: animal.brinco, motivo: `Carência ativa: ${meds}` });
             continue;
           }
         }
 
-        // ── Calcular snapshot econômico ──
+        eligible.push({
+          animalId,
+          brinco: animal.brinco,
+          pesoSaidaKg,
+          pesoEntradaKg: animal.pesoEntradaKg,
+          dataEntrada: animal.dataEntrada,
+          custoAquisicao: animal.custoAquisicao,
+        });
+      }
 
+      // ── Compute per-head sale value based on ACTUALLY processable animals ──
+      const valorPorCabeca =
+        tipoSaida === "VENDA" && valorVendaTotal && eligible.length > 0
+          ? valorVendaTotal / eligible.length
+          : null;
+
+      // ── Pass 2: create records for eligible animals ──
+      const processados = [];
+
+      for (const a of eligible) {
         // Custo acumulado
         const [rateioSuplem, rateioMed] = await Promise.all([
           tx.rateioSuplemento.aggregate({
-            where: { animalId },
+            where: { animalId: a.animalId },
             _sum: { valorRateio: true },
           }),
           tx.rateioMedicamento.aggregate({
-            where: { animalId },
+            where: { animalId: a.animalId },
             _sum: { valorRateio: true },
           }),
         ]);
 
         const custoTotalAcumulado =
-          animal.custoAquisicao +
+          a.custoAquisicao +
           (rateioSuplem._sum.valorRateio ?? 0) +
           (rateioMed._sum.valorRateio ?? 0);
 
         // GMD total, arroba produzida, custo por arroba
-        const pesoEntrada = animal.pesoEntradaKg;
-        const pesoSaida = pesoSaidaKg ?? null;
-        const diasNaRecria = differenceInDays(dataSaidaDate, animal.createdAt);
+        const pesoSaida = a.pesoSaidaKg ?? null;
+        const diasNaRecria = differenceInDays(dataSaidaDate, a.dataEntrada);
 
         let gmdTotal: number | null = null;
         let arrobaProduzida: number | null = null;
@@ -146,8 +173,8 @@ export async function POST(req: NextRequest) {
         let resultadoLiquido: number | null = null;
 
         if (pesoSaida && diasNaRecria > 0) {
-          gmdTotal = (pesoSaida - pesoEntrada) / diasNaRecria;
-          arrobaProduzida = (pesoSaida - pesoEntrada) / 15;
+          gmdTotal = (pesoSaida - a.pesoEntradaKg) / diasNaRecria;
+          arrobaProduzida = (pesoSaida - a.pesoEntradaKg) / 15;
           if (arrobaProduzida > 0) {
             custoPorArroba = custoTotalAcumulado / arrobaProduzida;
           }
@@ -157,10 +184,10 @@ export async function POST(req: NextRequest) {
           resultadoLiquido = valorPorCabeca - custoTotalAcumulado;
         }
 
-        // ── Criar registro de saída ──
+        // Criar registro de saída
         await tx.saida.create({
           data: {
-            animalId,
+            animalId: a.animalId,
             dataSaida: dataSaidaDate,
             tipoSaida,
             pesoSaidaKg: pesoSaida,
@@ -180,9 +207,9 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // ── Fechar pertinência ──
+        // Fechar pertinência
         const pertinenciaAtual = await tx.pertinenciaLote.findFirst({
-          where: { animalId, dataFim: null },
+          where: { animalId: a.animalId, dataFim: null },
         });
         if (pertinenciaAtual) {
           await tx.pertinenciaLote.update({
@@ -191,16 +218,16 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        // ── Inativar animal ──
+        // Inativar animal
         await tx.animal.update({
-          where: { id: animalId },
+          where: { id: a.animalId },
           data: { status: "INATIVO" },
         });
 
-        // ── Registrar movimentação ──
+        // Registrar movimentação
         await tx.movimentacao.create({
           data: {
-            animalId,
+            animalId: a.animalId,
             loteOrigemId: pertinenciaAtual?.loteId ?? null,
             dataMovimentacao: dataSaidaDate,
             tipo: "SAIDA_SISTEMA",
@@ -210,8 +237,8 @@ export async function POST(req: NextRequest) {
         });
 
         processados.push({
-          animalId,
-          brinco: animal.brinco,
+          animalId: a.animalId,
+          brinco: a.brinco,
           custoTotalAcumulado,
           resultadoLiquido,
           gmdTotal,

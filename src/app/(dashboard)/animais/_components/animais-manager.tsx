@@ -15,7 +15,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Separator } from "@/components/ui/separator";
 import { animalSchema, type AnimalFormData } from "@/lib/validations";
 import { animaisApi } from "@/lib/api";
-import { formatPeso, formatCurrency, SEXO_LABEL, TIPO_ENTRADA_LABEL } from "@/lib/utils";
+import { formatPeso, formatCurrency, SEXO_LABEL, TIPO_ENTRADA_LABEL, todayLocalStr } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { MovimentacaoSheet } from "./movimentacao-sheet";
 import { SaidaSheet } from "./saida-sheet";
@@ -31,7 +31,7 @@ type Animal = {
   pesagens: Pesagem[];
 };
 
-const today = new Date().toISOString().split("T")[0];
+const today = todayLocalStr();
 
 
 export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Animal[]; lotes: Lote[] }) {

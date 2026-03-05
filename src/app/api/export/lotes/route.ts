@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { format } from "date-fns";
 
 export async function GET(req: NextRequest) {
   try {
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
       cabecasAtivas: l.pertinencias.length,
       ativo: l.ativo ? "Sim" : "Não",
       descricao: l.descricao ?? "",
-      criadoEm: l.createdAt.toISOString().split("T")[0],
+      criadoEm: format(l.createdAt, "yyyy-MM-dd"),
     }));
 
     return NextResponse.json({ success: true, data: rows, total: rows.length });

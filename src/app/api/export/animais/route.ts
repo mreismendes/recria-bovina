@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { format } from "date-fns";
 
 export async function GET(req: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
         nome: a.nome ?? "",
         raca: a.raca ?? "",
         sexo: a.sexo === "MACHO" ? "Macho" : "Fêmea",
-        dataNascimento: a.dataNascimento?.toISOString().split("T")[0] ?? "",
+        dataNascimento: a.dataNascimento ? format(a.dataNascimento, "yyyy-MM-dd") : "",
         pesoEntradaKg: a.pesoEntradaKg,
         custoAquisicao: a.custoAquisicao,
         tipoEntrada: { COMPRA_EXTERNA: "Compra externa", NASCIMENTO_PROPRIO: "Nascimento próprio", TRANSFERENCIA_INTERNA: "Transferência" }[a.tipoEntrada] ?? a.tipoEntrada,

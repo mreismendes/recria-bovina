@@ -1,7 +1,23 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { format, differenceInDays } from 'date-fns'
+import { format, differenceInDays, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+
+/**
+ * Parses a "YYYY-MM-DD" date string as a local calendar date.
+ * Sets time to noon UTC to avoid timezone-boundary day shifts that occur
+ * with new Date("YYYY-MM-DD") (which parses as midnight UTC).
+ */
+export function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+}
+
+/** Returns today's date as "YYYY-MM-DD" using local timezone. */
+export function todayLocalStr(): string {
+  const n = new Date()
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
+}
 export function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)) }
 export function formatCurrency(v: number) { return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v) }
 export function formatDate(d: Date | string) { return format(typeof d==='string'?new Date(d):d, 'dd/MM/yyyy', { locale: ptBR }) }

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apontamentoSuplementoSchema } from "@/lib/validations";
 import { getAnimaisAtivosNoLoteNaData } from "@/lib/queries";
+import { parseLocalDate } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
-    const dataApontamentoDate = new Date(data.dataApontamento);
+    const dataApontamentoDate = parseLocalDate(data.dataApontamento);
 
     // Calcular cabeças ativas na data do apontamento (denominador do rateio)
     const animaisAtivos = await getAnimaisAtivosNoLoteNaData(data.loteId, dataApontamentoDate);

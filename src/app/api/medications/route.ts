@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apontamentoMedicamentoSchema } from "@/lib/validations";
 import { getAnimaisAtivosNoLoteNaData } from "@/lib/queries";
+import { parseLocalDate } from "@/lib/utils";
 import { addDays } from "date-fns";
 
 export async function POST(req: NextRequest) {
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
-    const dataApontamentoDate = new Date(data.dataApontamento);
+    const dataApontamentoDate = parseLocalDate(data.dataApontamento);
     const dataFimCarencia = addDays(dataApontamentoDate, data.carenciaDias);
 
     const animaisAtivos = await getAnimaisAtivosNoLoteNaData(data.loteId, dataApontamentoDate);
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
           unidadeDose: data.unidadeDose,
           custoTotal: data.custoTotal,
           loteProduto: data.loteProduto,
-          validade: data.validade ? new Date(data.validade) : null,
+          validade: data.validade ? parseLocalDate(data.validade) : null,
           carenciaDias: data.carenciaDias,
           cabecasAtivas: animaisAtivos.length,
           custoPerCapita,

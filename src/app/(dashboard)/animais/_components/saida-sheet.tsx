@@ -9,11 +9,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { animaisApi } from "@/lib/api";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, todayLocalStr } from "@/lib/utils";
 
 type Animal = { id: string; brinco: string; nome?: string | null; pesoEntradaKg: number };
 
-const today = new Date().toISOString().split("T")[0];
+const today = todayLocalStr();
 
 const TIPO_SAIDA_LABEL: Record<string, string> = {
   VENDA: "Venda",

@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sessaoPesagemSchema } from "@/lib/validations";
-import { calcularGMD } from "@/lib/utils";
+import { calcularGMD, parseLocalDate } from "@/lib/utils";
 import { differenceInDays } from "date-fns";
 
 // ── GET: Histórico de pesagens ──────────────────────────────────────────────
@@ -17,25 +17,63 @@ export async function GET(req: NextRequest) {
     const animalId = searchParams.get("animalId");
     const limit = parseInt(searchParams.get("limit") ?? "100", 10);
 
-    const pesagens = await prisma.pesagem.findMany({
-      where: {
-        ...(animalId && { animalId }),
-        ...(loteId && {
+    // When filtering by lot, we need to find weighings where the animal
+    // belonged to this lot on the weighing date (event-time), not current membership.
+    let pesagens;
+
+    if (loteId) {
+      // Use raw query approach: find all pertinências for this lot,
+      // then match weighings that fall within those intervals
+      pesagens = await prisma.pesagem.findMany({
+        where: {
+          ...(animalId && { animalId }),
           animal: {
             pertinencias: {
-              some: { loteId, OR: [{ dataFim: null }, { dataFim: { gt: new Date() } }] },
+              some: { loteId },
             },
           },
-        }),
-      },
-      include: {
-        animal: {
-          select: { id: true, brinco: true, nome: true, pesoEntradaKg: true },
         },
-      },
-      orderBy: { dataPesagem: "desc" },
-      take: Math.min(limit, 500),
-    });
+        include: {
+          animal: {
+            select: {
+              id: true,
+              brinco: true,
+              nome: true,
+              pesoEntradaKg: true,
+              pertinencias: {
+                where: { loteId },
+                select: { dataInicio: true, dataFim: true },
+              },
+            },
+          },
+        },
+        orderBy: { dataPesagem: "desc" },
+        take: Math.min(limit, 500) * 2, // over-fetch since we'll filter
+      });
+
+      // Post-filter: keep only weighings where dataPesagem falls within
+      // a pertinência interval for this lot
+      pesagens = pesagens.filter((p) => {
+        return p.animal.pertinencias.some((pert) => {
+          const afterStart = p.dataPesagem >= pert.dataInicio;
+          const beforeEnd = !pert.dataFim || p.dataPesagem < pert.dataFim;
+          return afterStart && beforeEnd;
+        });
+      }).slice(0, Math.min(limit, 500));
+    } else {
+      pesagens = await prisma.pesagem.findMany({
+        where: {
+          ...(animalId && { animalId }),
+        },
+        include: {
+          animal: {
+            select: { id: true, brinco: true, nome: true, pesoEntradaKg: true },
+          },
+        },
+        orderBy: { dataPesagem: "desc" },
+        take: Math.min(limit, 500),
+      });
+    }
 
     return NextResponse.json({ success: true, data: pesagens });
   } catch {
@@ -57,7 +95,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { loteId, dataPesagem, pesagens, responsavel, observacoes } = parsed.data;
-    const dataPesagemDate = new Date(dataPesagem);
+    const dataPesagemDate = parseLocalDate(dataPesagem);
 
     // Validar lote
     const lote = await prisma.lote.findUnique({ where: { id: loteId } });
@@ -83,11 +121,23 @@ export async function POST(req: NextRequest) {
         });
         if (existente) continue;
 
-        // Buscar animal para o brinco
+        // Buscar animal e verify it's active
         const animal = await tx.animal.findUnique({
           where: { id: p.animalId },
-          select: { brinco: true },
+          select: { brinco: true, status: true },
         });
+        if (!animal || animal.status !== "ATIVO") continue;
+
+        // Validate lot membership on the weighing date
+        const pertinencia = await tx.pertinenciaLote.findFirst({
+          where: {
+            animalId: p.animalId,
+            loteId,
+            dataInicio: { lte: dataPesagemDate },
+            OR: [{ dataFim: null }, { dataFim: { gt: dataPesagemDate } }],
+          },
+        });
+        if (!pertinencia) continue; // animal not in this lot on this date
 
         // Buscar última pesagem DENTRO da transação (fix: era fora do tx)
         const ultima = await tx.pesagem.findFirst({

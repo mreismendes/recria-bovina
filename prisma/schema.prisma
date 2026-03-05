@@ -91,6 +91,7 @@ model Animal {
   raca           String?
   sexo           Sexo
   dataNascimento DateTime?
+  dataEntrada    DateTime     // data de entrada operacional — usada para diasNaRecria e GMD
   pesoEntradaKg  Float        // peso registrado na entrada — imutável após criação
   custoAquisicao Float        @default(0)
   tipoEntrada    TipoEntrada
@@ -108,7 +109,7 @@ model Animal {
   rateiosSuplem   RateioSuplemento[]
   rateiosMed      RateioMedicamento[]
   carencias       CarenciaMedicamento[]
-  saida           Saida?
+  saidas          Saida[]
   movimentacoes   Movimentacao[]
 
   @@map("animais")
@@ -370,7 +371,7 @@ model CarenciaMedicamento {
 
 model Saida {
   id                  String    @id @default(cuid())
-  animalId            String    @unique
+  animalId            String
   animal              Animal    @relation(fields: [animalId], references: [id])
   dataSaida           DateTime
   tipoSaida           TipoSaida
@@ -396,6 +397,7 @@ model Saida {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([animalId, estornada])
   @@map("saidas")
 }
 
