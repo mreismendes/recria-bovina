@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,6 +53,15 @@ export function SaidaSheet({
     processados: { brinco: string; custoTotalAcumulado: number; resultadoLiquido: number | null; gmdTotal: number | null }[];
     bloqueados: { brinco: string; motivo: string }[];
   } | null>(null);
+
+  // Reseta o estado dos pesos sempre que a lista de animais mudar ou o sheet abrir
+  useEffect(() => {
+    if (open && animais.length > 0) {
+      setPesos(animais.map((a) => ({ animalId: a.id, pesoSaidaKg: "" })));
+      setError(null);
+      setResultado(null);
+    }
+  }, [open, animais]);
 
   const isVenda = tipoSaida === "VENDA";
   const isMorte = tipoSaida === "MORTE";
