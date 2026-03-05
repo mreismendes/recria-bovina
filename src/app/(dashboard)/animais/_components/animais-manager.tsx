@@ -33,9 +33,8 @@ type Animal = {
 
 const today = new Date().toISOString().split("T")[0];
 
-type Propriedade = { id: string; nome: string };
 
-export function AnimaisManager({ initialAnimais, lotes, propriedades }: { initialAnimais: Animal[]; lotes: Lote[]; propriedades: Propriedade[] }) {
+export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Animal[]; lotes: Lote[] }) {
   const router = useRouter();
   const [items, setItems]         = useState(initialAnimais);
   const [search, setSearch]       = useState("");

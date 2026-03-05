@@ -37,3 +37,7 @@ prisma/migrations/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Deploy scripts (temporários)
+*-deploy/
+fix-*.sh
