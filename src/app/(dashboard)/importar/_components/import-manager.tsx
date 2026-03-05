@@ -56,7 +56,6 @@ type ImportResult = {
     criados: { brinco: string; lote: string; contrato: string }[];
     pulados: { brinco: string; motivo: string }[];
     lotesCriados?: string[];
-    lotesCriados: string[];
   };
   pesagens?: {
     registradas: number;
@@ -399,9 +398,6 @@ export function ImportManager({
           )}
         </div>
 
-        {result.animais?.lotesCriados && result.animais.lotesCriados.length > 0 && (
-          <p className="text-sm text-gray-600"><span className="font-medium">Lotes criados:</span> {result.animais.lotesCriados.join(", ")}</p>
-        )}
         {result.animais?.lotesCriados && result.animais.lotesCriados.length > 0 && (
           <p className="text-sm text-gray-600"><span className="font-medium">Lotes criados:</span> {result.animais.lotesCriados.join(", ")}</p>
         )}
