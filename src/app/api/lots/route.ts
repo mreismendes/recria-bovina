@@ -12,16 +12,16 @@ import { loteSchema } from "@/lib/validations";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const propriedadeId = searchParams.get("propriedadeId");
+    const contratoId = searchParams.get("contratoId");
     const ativo = searchParams.get("ativo");
 
     const lotes = await prisma.lote.findMany({
       where: {
-        ...(propriedadeId && { propriedadeId }),
+        ...(contratoId && { contratoId }),
         ...(ativo !== null && { ativo: ativo !== "false" }),
       },
       include: {
-        propriedade: true,
+        contrato: true,
         pertinencias: { where: { dataFim: null }, select: { id: true } },
       },
       orderBy: { nome: "asc" },

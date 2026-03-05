@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const propIds = searchParams.get("propriedadeIds")?.split(",").filter(Boolean) ?? [];
+    const contratoIds = searchParams.get("contratoIds")?.split(",").filter(Boolean) ?? [];
     const statuses = searchParams.get("status")?.split(",").filter(Boolean) ?? [];
 
     const ativoFilter: boolean | undefined =
@@ -15,10 +15,10 @@ export async function GET(req: NextRequest) {
     const lotes = await prisma.lote.findMany({
       where: {
         ...(ativoFilter !== undefined && { ativo: ativoFilter }),
-        ...(propIds.length > 0 && { propriedadeId: { in: propIds } }),
+        ...(propIds.length > 0 && { contratoId: { in: contratoIds } }),
       },
       include: {
-        propriedade: { select: { nome: true } },
+        contrato: { select: { nomeFazenda: true } },
         pertinencias: { where: { dataFim: null }, select: { id: true } },
       },
       orderBy: { nome: "asc" },
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
     const rows = lotes.map((l) => ({
       nome: l.nome,
-      propriedade: l.propriedade.nome,
+      fazenda: l.contrato.nomeFazenda,
       cabecasAtivas: l.pertinencias.length,
       ativo: l.ativo ? "Sim" : "Não",
       descricao: l.descricao ?? "",

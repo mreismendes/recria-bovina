@@ -9,7 +9,7 @@ export default async function PesagensPage() {
   const lotes = await prisma.lote.findMany({
     where: { ativo: true },
     orderBy: { nome: "asc" },
-    include: { propriedade: { select: { nome: true } } },
+    include: { contrato: { select: { nomeFazenda: true } } },
   });
 
   // Para cada lote, buscar animais ativos com última pesagem
@@ -62,7 +62,7 @@ export default async function PesagensPage() {
       lotes={lotes.map((l) => ({
         id: l.id,
         nome: l.nome,
-        propriedade: l.propriedade,
+        contrato: l.contrato,
       }))}
       animaisPorLote={animaisPorLote}
     />

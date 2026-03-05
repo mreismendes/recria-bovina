@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import { MovimentacaoSheet } from "./movimentacao-sheet";
 import { SaidaSheet } from "./saida-sheet";
 
-type Lote = { id: string; nome: string; propriedade: { nome: string } };
+type Lote = { id: string; nome: string; contrato: { nomeFazenda: string } };
 type Pesagem = { id: string; pesoKg: number; dataPesagem: string; gmdPeriodo?: number | null };
 type Pertinencia = { lote: Lote; dataInicio: string; dataFim?: string | null };
 type Animal = {
@@ -280,7 +280,7 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
                     {loteAtual
                       ? <div>
                           <span className="text-sm font-medium">{loteAtual.nome}</span>
-                          <p className="text-xs text-gray-400">{loteAtual.propriedade.nome}</p>
+                          <p className="text-xs text-gray-400">{loteAtual.contrato.nomeFazenda}</p>
                         </div>
                       : <span className="text-gray-300">—</span>
                     }
@@ -420,7 +420,7 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Selecione o lote" /></SelectTrigger></FormControl>
                             <SelectContent>
-                              {lotes.map(l => <SelectItem key={l.id} value={l.id}>{l.nome} — {l.propriedade.nome}</SelectItem>)}
+                              {lotes.map(l => <SelectItem key={l.id} value={l.id}>{l.nome} — {l.contrato.nomeFazenda}</SelectItem>)}
                             </SelectContent>
                           </Select>
                           <FormMessage />

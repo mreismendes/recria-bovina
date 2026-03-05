@@ -6,11 +6,6 @@ RUN npm ci
 COPY . .
 RUN npx prisma generate
 
-# Generate migration from schema (guaranteed to exist regardless of cache)
-RUN mkdir -p prisma/migrations/20260305000000_init && \
-    npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/20260305000000_init/migration.sql && \
-    echo 'provider = "postgresql"' > prisma/migrations/migration_lock.toml
-
 RUN npm run build
 
 # ── Production stage ──────────────────────────────────────────
@@ -39,4 +34,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["/bin/sh", "-c", "echo '>>> Running migrations...' && node ./node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma && echo '>>> Migrations done' && node ./scripts/create-admin.js && exec node server.js"]
+CMD ["/bin/sh", "-c", "echo '>>> Syncing database schema...' && node ./node_modules/prisma/build/index.js db push --schema=./prisma/schema.prisma --accept-data-loss --skip-generate && echo '>>> Schema synced' && node ./scripts/create-admin.js && exec node server.js"]

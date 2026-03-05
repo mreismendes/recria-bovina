@@ -16,7 +16,7 @@ type ValidatedAnimalRow = {
   status: RowStatus;
   messages: string[];
   data: {
-    propriedade: string;
+    contrato: string;
     lote: string;
     brinco: string;
     rfid: string | null;
@@ -32,7 +32,7 @@ type ValidatedAnimalRow = {
     dataEntrada: string;
     observacoes: string | null;
   };
-  newProp: boolean;
+  newContrato: boolean;
   newLote: boolean;
 };
 
@@ -53,9 +53,9 @@ type ValidatedPesagemRow = {
 
 type ImportResult = {
   animais?: {
-    criados: { brinco: string; lote: string; propriedade: string }[];
+    criados: { brinco: string; lote: string; contrato: string }[];
     pulados: { brinco: string; motivo: string }[];
-    propriedadesCriadas: string[];
+    lotesCriados?: string[];
     lotesCriados: string[];
   };
   pesagens?: {
@@ -113,14 +113,14 @@ const today = new Date().toISOString().split("T")[0];
 // ── Component ───────────────────────────────────────────────────────────────
 
 export function ImportManager({
-  existingProps,
+  existingContratos,
   existingLotes,
   existingBrincos,
   existingRfids,
   existingPesagemKeys,
 }: {
-  existingProps: string[];
-  existingLotes: { nome: string; propriedade: string }[];
+  existingContratos: string[];
+  existingLotes: { nome: string; contrato: string }[];
   existingBrincos: string[];
   existingRfids: string[];
   existingPesagemKeys: string[];
@@ -133,8 +133,8 @@ export function ImportManager({
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const propSet = new Set(existingProps.map((p) => p.toLowerCase()));
-  const loteSet = new Set(existingLotes.map((l) => `${l.propriedade.toLowerCase()}|${l.nome.toLowerCase()}`));
+  const contratoSet = new Set(existingContratos.map((c) => c.toLowerCase()));
+  const loteSet = new Set(existingLotes.map((l) => `${l.contrato.toLowerCase()}|${l.nome.toLowerCase()}`));
   const brincoSet = new Set(existingBrincos.map((b) => b.toLowerCase()));
   const rfidSet = new Set(existingRfids.filter(Boolean).map((r) => r.toLowerCase()));
   const pesagemKeySet = new Set(existingPesagemKeys.map((k) => k.toLowerCase()));
@@ -190,7 +190,7 @@ export function ImportManager({
       reader.readAsArrayBuffer(file);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [propSet, loteSet, brincoSet, rfidSet, pesagemKeySet]
+    [contratoSet, loteSet, brincoSet, rfidSet, pesagemKeySet]
   );
 
   // ── Validate animal rows ──
@@ -204,7 +204,7 @@ export function ImportManager({
       const msgs: string[] = [];
       let status: RowStatus = "ok";
 
-      const prop = String(getCol(r, "Propriedade", "propriedade")).trim();
+      const ctr = String(getCol(r, "Contrato", "contrato")).trim();
       const lote = String(getCol(r, "Lote", "lote")).trim();
       const brinco = String(getCol(r, "Brinco", "brinco")).trim();
       const rfid = String(getCol(r, "RFID", "rfid")).trim() || null;
@@ -220,7 +220,7 @@ export function ImportManager({
       const dataEnt = normDate(getCol(r, "Data Entrada", "data entrada", "Data entrada")) ?? today;
       const obs = String(getCol(r, "Observações", "Observacoes", "observações", "observacoes")).trim() || null;
 
-      if (!prop) { msgs.push("Propriedade vazia"); status = "error"; }
+      if (!ctr) { msgs.push("Contrato vazio"); status = "error"; }
       if (!lote) { msgs.push("Lote vazio"); status = "error"; }
       if (!brinco) { msgs.push("Brinco vazio"); status = "error"; }
       if (!sexo) { msgs.push("Sexo inválido"); status = "error"; }
@@ -240,11 +240,11 @@ export function ImportManager({
         msgs.push("RFID já existe"); status = "error";
       }
 
-      const newProp = prop ? !propSet.has(prop.toLowerCase()) : false;
-      const newLote = prop && lote ? !loteSet.has(`${prop.toLowerCase()}|${lote.toLowerCase()}`) : false;
+      const newContrato = ctr ? !contratoSet.has(ctr.toLowerCase()) : false;
+      const newLote = ctr && lote ? !loteSet.has(`${ctr.toLowerCase()}|${lote.toLowerCase()}`) : false;
 
-      if (newProp && status !== "error") {
-        msgs.push(`Propriedade "${prop}" será criada`);
+      if (newContrato && status !== "error") {
+        msgs.push(`Contrato não encontrado`);
         if (status === "ok") status = "warning";
       }
       if (newLote && status !== "error") {
@@ -256,9 +256,9 @@ export function ImportManager({
         rowNum: i + 2,
         status,
         messages: msgs,
-        newProp,
+        newContrato,
         newLote,
-        data: { propriedade: prop, lote, brinco, rfid, nome, raca, sexo, dataNascimento: dataNasc, pesoEntradaKg: peso, custoAquisicao: custo, tipoEntrada: tipo, origem, gta, dataEntrada: dataEnt, observacoes: obs },
+        data: { contrato: ctr, lote, brinco, rfid, nome, raca, sexo, dataNascimento: dataNasc, pesoEntradaKg: peso, custoAquisicao: custo, tipoEntrada: tipo, origem, gta, dataEntrada: dataEnt, observacoes: obs },
       });
     }
     return validated;
@@ -399,8 +399,8 @@ export function ImportManager({
           )}
         </div>
 
-        {result.animais?.propriedadesCriadas && result.animais.propriedadesCriadas.length > 0 && (
-          <p className="text-sm text-gray-600"><span className="font-medium">Propriedades criadas:</span> {result.animais.propriedadesCriadas.join(", ")}</p>
+        {result.animais?.lotesCriados && result.animais.lotesCriados.length > 0 && (
+          <p className="text-sm text-gray-600"><span className="font-medium">Lotes criados:</span> {result.animais.lotesCriados.join(", ")}</p>
         )}
         {result.animais?.lotesCriados && result.animais.lotesCriados.length > 0 && (
           <p className="text-sm text-gray-600"><span className="font-medium">Lotes criados:</span> {result.animais.lotesCriados.join(", ")}</p>
@@ -481,7 +481,7 @@ export function ImportManager({
                 <TableRow>
                   <TableHead className="w-10">#</TableHead>
                   <TableHead className="w-10"></TableHead>
-                  <TableHead>Propriedade</TableHead>
+                  <TableHead>Contrato</TableHead>
                   <TableHead>Lote</TableHead>
                   <TableHead>Brinco</TableHead>
                   <TableHead>Sexo</TableHead>
@@ -499,8 +499,8 @@ export function ImportManager({
                       {r.status === "error" && <XCircle className="h-4 w-4 text-red-500" />}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {r.data.propriedade}
-                      {r.newProp && <Badge variant="outline" className="ml-1 text-[10px] text-blue-600">nova</Badge>}
+                      {r.data.contrato}
+                      {r.newContrato && <Badge variant="outline" className="ml-1 text-[10px] text-blue-600">nova</Badge>}
                     </TableCell>
                     <TableCell className="text-sm">
                       {r.data.lote}

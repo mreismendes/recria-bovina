@@ -8,7 +8,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { Beef, Scale, Layers, Download, Loader2 } from "lucide-react";
 
 type Lote = { id: string; nome: string };
-type Propriedade = { id: string; nome: string };
+type Contrato = { id: string; idContrato: string; nomeFazenda: string };
 
 // ── XLSX download ───────────────────────────────────────────────────────────
 
@@ -39,10 +39,10 @@ function downloadXlsx(data: Record<string, unknown>[], headers: Record<string, s
 
 export function ExportManager({
   lotes,
-  propriedades,
+  contratos,
 }: {
   lotes: Lote[];
-  propriedades: Propriedade[];
+  contratos: Contrato[];
 }) {
   return (
     <div className="space-y-6">
@@ -53,7 +53,7 @@ export function ExportManager({
       <div className="grid grid-cols-1 gap-6">
         <ExportAnimais lotes={lotes} />
         <ExportPesagens lotes={lotes} />
-        <ExportLotes propriedades={propriedades} />
+        <ExportLotes contratos={contratos} />
       </div>
     </div>
   );
@@ -88,7 +88,7 @@ function ExportAnimais({ lotes }: { lotes: Lote[] }) {
         dataNascimento: "Data Nascimento", pesoEntradaKg: "Peso Entrada (kg)",
         custoAquisicao: "Custo Aquisição (R$)", tipoEntrada: "Tipo Entrada",
         origem: "Origem", gta: "GTA", loteAtual: "Lote Atual",
-        propriedade: "Propriedade", status: "Status", observacoes: "Observações",
+        fazenda: "Fazenda (Contrato)", status: "Status", observacoes: "Observações",
       }, `animais_${new Date().toISOString().split("T")[0]}.xlsx`);
 
       setMsg(`${json.data.length} animal(is) exportado(s).`);
@@ -102,7 +102,7 @@ function ExportAnimais({ lotes }: { lotes: Lote[] }) {
         <div className="bg-green-50 rounded-lg p-2.5"><Beef className="h-5 w-5 text-green-700" /></div>
         <div>
           <h2 className="font-semibold text-gray-900">Cadastro de Animais</h2>
-          <p className="text-xs text-gray-500">Brinco, raça, sexo, peso, lote, propriedade e mais</p>
+          <p className="text-xs text-gray-500">Brinco, raça, sexo, peso, lote, fazenda e mais</p>
         </div>
       </div>
 
@@ -232,8 +232,8 @@ function ExportPesagens({ lotes }: { lotes: Lote[] }) {
 
 // ── Exportar Lotes ──────────────────────────────────────────────────────────
 
-function ExportLotes({ propriedades }: { propriedades: Propriedade[] }) {
-  const [propIds, setPropIds] = useState<string[]>([]);
+function ExportLotes({ contratos }: { contratos: Contrato[] }) {
+  const [contratoIds, setPropIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>(["ATIVO"]);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -243,7 +243,7 @@ function ExportLotes({ propriedades }: { propriedades: Propriedade[] }) {
     setMsg(null);
     try {
       const qs = new URLSearchParams();
-      if (propIds.length > 0) qs.set("propriedadeIds", propIds.join(","));
+      if (contratoIds.length > 0) qs.set("contratoIds", contratoIds.join(","));
       if (statuses.length > 0) qs.set("status", statuses.join(","));
 
       const res = await fetch(`/api/export/lotes?${qs}`);
@@ -253,7 +253,7 @@ function ExportLotes({ propriedades }: { propriedades: Propriedade[] }) {
       if (json.data.length === 0) { setMsg("Nenhum lote encontrado."); return; }
 
       downloadXlsx(json.data, {
-        nome: "Lote", propriedade: "Propriedade", cabecasAtivas: "Cabeças Ativas",
+        nome: "Lote", fazenda: "Fazenda (Contrato)", cabecasAtivas: "Cabeças Ativas",
         ativo: "Ativo", descricao: "Descrição", criadoEm: "Criado em",
       }, `lotes_${new Date().toISOString().split("T")[0]}.xlsx`);
 
@@ -268,17 +268,17 @@ function ExportLotes({ propriedades }: { propriedades: Propriedade[] }) {
         <div className="bg-amber-50 rounded-lg p-2.5"><Layers className="h-5 w-5 text-amber-700" /></div>
         <div>
           <h2 className="font-semibold text-gray-900">Cadastro de Lotes</h2>
-          <p className="text-xs text-gray-500">Lote, propriedade, cabeças ativas e status</p>
+          <p className="text-xs text-gray-500">Lote, fazenda, cabeças ativas e status</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <div>
-          <label className="text-xs font-medium text-gray-500">Propriedades</label>
+          <label className="text-xs font-medium text-gray-500">Contratos</label>
           <MultiSelect
             className="mt-1"
-            options={propriedades.map((p) => ({ value: p.id, label: p.nome }))}
-            selected={propIds}
+            options={contratos.map((c) => ({ value: c.id, label: c.idContrato + " — " + c.nomeFazenda }))}
+            selected={contratoIds}
             onChange={(v) => { setPropIds(v); setMsg(null); }}
             allLabel="Todas"
           />

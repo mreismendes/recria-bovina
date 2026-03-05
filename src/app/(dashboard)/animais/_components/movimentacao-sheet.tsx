@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { animaisApi } from "@/lib/api";
 
-type Lote = { id: string; nome: string; propriedade: { nome: string } };
+type Lote = { id: string; nome: string; contrato: { nomeFazenda: string } };
 type Animal = { id: string; brinco: string; nome?: string | null };
 
 const today = new Date().toISOString().split("T")[0];
@@ -98,7 +98,7 @@ export function MovimentacaoSheet({
               <SelectContent>
                 {lotesDisponiveis.map((l) => (
                   <SelectItem key={l.id} value={l.id}>
-                    {l.nome} — {l.propriedade.nome}
+                    {l.nome} — {l.contrato.nomeFazenda}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -36,24 +36,23 @@ enum UserRole {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROPRIEDADE
+// CONTRATO (Parceria / Fazenda parceira)
+// Cada contrato representa uma parceria com uma fazenda onde o gado é alocado.
 // ─────────────────────────────────────────────────────────────────────────────
 
-model Propriedade {
-  id        String  @id @default(cuid())
-  nome      String
-  cnpjCpf   String?
-  municipio String?
-  estado    String?
-  ativa     Boolean @default(true)
+model Contrato {
+  id          String  @id @default(cuid())
+  idContrato  String  @unique              // código definido pelo usuário, ex: "RCA-2025-001"
+  nomeFazenda String
+  observacoes String?
+  ativo       Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  lotes    Lote[]
-  piquetes Piquete[]
+  lotes Lote[]
 
-  @@map("propriedades")
+  @@map("contratos")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -62,12 +61,12 @@ model Propriedade {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Lote {
-  id            String      @id @default(cuid())
-  nome          String
-  descricao     String?
-  propriedadeId String
-  propriedade   Propriedade @relation(fields: [propriedadeId], references: [id])
-  ativo         Boolean     @default(true)
+  id         String   @id @default(cuid())
+  nome       String
+  descricao  String?
+  contratoId String
+  contrato   Contrato @relation(fields: [contratoId], references: [id])
+  ativo      Boolean  @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -77,25 +76,6 @@ model Lote {
   apontamentosMedicamento ApontamentoMedicamento[]
 
   @@map("lotes")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PIQUETE
-// Localização física. Independente do lote.
-// ─────────────────────────────────────────────────────────────────────────────
-
-model Piquete {
-  id            String      @id @default(cuid())
-  nome          String
-  areaHectares  Float?
-  propriedadeId String
-  propriedade   Propriedade @relation(fields: [propriedadeId], references: [id])
-  ativo         Boolean     @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("piquetes")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

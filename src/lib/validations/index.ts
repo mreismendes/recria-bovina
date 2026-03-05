@@ -167,7 +167,7 @@ export type ProdutoFormData = z.infer<typeof produtoSchema>;
 export const loteSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório").max(200),
   descricao: z.string().max(500).optional().nullable(),
-  propriedadeId: z.string().min(1, "Propriedade é obrigatória"),
+  contratoId: z.string().min(1, "Contrato é obrigatório"),
 });
 
 export type LoteFormData = z.infer<typeof loteSchema>;

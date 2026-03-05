@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       include: {
         pertinencias: {
           where: { dataFim: null },
-          include: { lote: { include: { propriedade: { select: { nome: true } } } } },
+          include: { lote: { include: { contrato: { select: { nomeFazenda: true } } } } },
           take: 1,
         },
       },
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
         origem: a.origem ?? "",
         gta: a.gtaEntrada ?? "",
         loteAtual: pert?.lote.nome ?? "",
-        propriedade: pert?.lote.propriedade.nome ?? "",
+        fazenda: pert?.lote.contrato.nomeFazenda ?? "",
         status: a.status === "ATIVO" ? "Ativo" : "Inativo",
         observacoes: a.observacoes ?? "",
       };

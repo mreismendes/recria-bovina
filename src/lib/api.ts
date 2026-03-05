@@ -16,20 +16,20 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return (json as { success: true; data: T }).data;
 }
 
-// ── Propriedades ──────────────────────────────────────────────────────────────
+// ── Contratos ──────────────────────────────────────────────────────────────
 
-export const propriedadesApi = {
-  list: () => apiFetch<any[]>("/api/propriedades"),
-  create: (data: unknown) => apiFetch<any>("/api/propriedades", { method: "POST", body: JSON.stringify(data) }),
-  update: (id: string, data: unknown) => apiFetch<any>(`/api/propriedades/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  remove: (id: string) => apiFetch<any>(`/api/propriedades/${id}`, { method: "DELETE" }),
+export const contratosApi = {
+  list: () => apiFetch<any[]>("/api/contratos"),
+  create: (data: unknown) => apiFetch<any>("/api/contratos", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: string, data: unknown) => apiFetch<any>(`/api/contratos/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  remove: (id: string) => apiFetch<any>(`/api/contratos/${id}`, { method: "DELETE" }),
 };
 
 // ── Lotes ─────────────────────────────────────────────────────────────────────
 
 export const lotesApi = {
-  list: (params?: { propriedadeId?: string }) => {
-    const qs = params?.propriedadeId ? `?propriedadeId=${params.propriedadeId}` : "";
+  list: (params?: { contratoId?: string }) => {
+    const qs = params?.contratoId ? `?contratoId=${params.contratoId}` : "";
     return apiFetch<any[]>(`/api/lots${qs}`);
   },
   create: (data: unknown) => apiFetch<any>("/api/lots", { method: "POST", body: JSON.stringify(data) }),

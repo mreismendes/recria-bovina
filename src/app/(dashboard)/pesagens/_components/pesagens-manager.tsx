@@ -12,7 +12,7 @@ import { Scale, TrendingUp, TrendingDown, Minus, ArrowRight } from "lucide-react
 import { pesagensApi } from "@/lib/api";
 import { formatPeso, formatCurrency, formatDate } from "@/lib/utils";
 
-type Lote = { id: string; nome: string; propriedade: { nome: string } };
+type Lote = { id: string; nome: string; contrato: { nomeFazenda: string } };
 type AnimalNoLote = {
   id: string;
   brinco: string;
@@ -255,7 +255,7 @@ function NovaSessao({
               <SelectContent>
                 {lotes.map((l) => (
                   <SelectItem key={l.id} value={l.id}>
-                    {l.nome} — {l.propriedade.nome}
+                    {l.nome} — {l.contrato.nomeFazenda}
                   </SelectItem>
                 ))}
               </SelectContent>
