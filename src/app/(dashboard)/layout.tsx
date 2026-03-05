@@ -1,6 +1,9 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 
+// Prevent Next.js from pre-rendering pages that use Prisma during Docker build
+export const dynamic = 'force-dynamic';
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
