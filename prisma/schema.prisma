@@ -216,6 +216,7 @@ model Produto {
   id               String      @id @default(cuid())
   nome             String
   tipo             TipoProduto
+  fabricante       String?     // nome do fabricante
   principioAtivo   String?     // medicamentos
   viaAdministracao String?     // medicamentos
   carenciaDias     Int?        // medicamentos — padrão (editável no apontamento)

@@ -149,6 +149,7 @@ export const produtoSchema = z.object({
     "SUPLEMENTO_MINERAL", "SUPLEMENTO_PROTEICO", "SUPLEMENTO_ENERGETICO", "SUPLEMENTO_MISTO",
     "VERMIFUGO", "CARRAPATICIDA", "VACINA", "ANTIBIOTICO", "VITAMINA", "OUTRO_MEDICAMENTO",
   ]),
+  fabricante: z.string().max(200).optional().nullable(),
   principioAtivo: z.string().max(200).optional().nullable(),
   viaAdministracao: z.string().max(100).optional().nullable(),
   carenciaDias: z.number().int().min(0).optional().nullable(),

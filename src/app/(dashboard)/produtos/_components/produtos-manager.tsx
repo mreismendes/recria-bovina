@@ -22,7 +22,7 @@ const TIPOS_SUPLEMENTO = ["SUPLEMENTO_MINERAL","SUPLEMENTO_PROTEICO","SUPLEMENTO
 const TIPOS_MEDICAMENTO = ["VERMIFUGO","CARRAPATICIDA","VACINA","ANTIBIOTICO","VITAMINA","OUTRO_MEDICAMENTO"] as const;
 
 type Produto = {
-  id: string; nome: string; tipo: string; principioAtivo?: string | null;
+  id: string; nome: string; tipo: string; fabricante?: string | null; principioAtivo?: string | null;
   viaAdministracao?: string | null; carenciaDias?: number | null;
   unidadeMedida: string; precoUnitario?: number | null; ativo: boolean; observacoes?: string | null;
 };
@@ -41,7 +41,7 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
 
   const form = useForm<ProdutoFormData>({
     resolver: zodResolver(produtoSchema),
-    defaultValues: { nome: "", tipo: "SUPLEMENTO_MINERAL", unidadeMedida: "kg", precoUnitario: undefined },
+    defaultValues: { nome: "", tipo: "SUPLEMENTO_MINERAL", unidadeMedida: "kg", precoUnitario: undefined, fabricante: "" },
   });
 
   const watchTipo = form.watch("tipo");
@@ -59,7 +59,7 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
     form.reset({
       nome: "", tipo: grupo === "suplemento" ? "SUPLEMENTO_MINERAL" : "VERMIFUGO",
       unidadeMedida: grupo === "suplemento" ? "kg" : "mL",
-      precoUnitario: undefined, principioAtivo: "", viaAdministracao: "", carenciaDias: undefined,
+      precoUnitario: undefined, fabricante: "", principioAtivo: "", viaAdministracao: "", carenciaDias: undefined,
     });
     setError(null);
     setSheetOpen(true);
@@ -70,7 +70,7 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
     setTipoGrupo(isSuplemento(item.tipo) ? "suplemento" : "medicamento");
     form.reset({
       nome: item.nome, tipo: item.tipo as any, unidadeMedida: item.unidadeMedida,
-      precoUnitario: item.precoUnitario ?? undefined,
+      precoUnitario: item.precoUnitario ?? undefined, fabricante: item.fabricante ?? "",
       principioAtivo: item.principioAtivo ?? "", viaAdministracao: item.viaAdministracao ?? "",
       carenciaDias: item.carenciaDias ?? undefined, observacoes: item.observacoes ?? "",
     });
@@ -144,6 +144,7 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Fabricante</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Princípio Ativo</TableHead>
               <TableHead>Unidade</TableHead>
@@ -155,7 +156,7 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
           <TableBody>
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-gray-400">
+                <TableCell colSpan={8} className="text-center py-12 text-gray-400">
                   <Package className="h-10 w-10 mx-auto mb-2 opacity-30" />
                   Nenhum produto nesta categoria
                 </TableCell>
@@ -164,6 +165,7 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
             {filtered.map(item => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.nome}</TableCell>
+                <TableCell className="text-gray-500 text-sm">{item.fabricante || "—"}</TableCell>
                 <TableCell>
                   <Badge variant={isSuplemento(item.tipo) ? "secondary" : "outline"} className="text-xs">
                     {TIPO_PRODUTO_LABEL[item.tipo] ?? item.tipo}
@@ -226,6 +228,14 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
                 <FormItem>
                   <FormLabel>Nome comercial *</FormLabel>
                   <FormControl><Input placeholder="Ex: Mineral Proteico 30%" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="fabricante" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fabricante</FormLabel>
+                  <FormControl><Input placeholder="Ex: Tortuga, Zoetis, MSD" {...field} value={field.value ?? ""} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
