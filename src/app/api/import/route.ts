@@ -9,6 +9,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { parseLocalDate } from "@/lib/utils";
 import { z } from "zod";
 
 const importRowSchema = z.object({
@@ -122,7 +123,7 @@ export async function POST(req: NextRequest) {
           lotesCriados.add(`${loteNome} (${contratoId})`);
         }
 
-        const dataEntradaDate = new Date(row.dataEntrada);
+        const dataEntradaDate = parseLocalDate(row.dataEntrada);
 
         const novoAnimal = await tx.animal.create({
           data: {
@@ -131,7 +132,8 @@ export async function POST(req: NextRequest) {
             nome: row.nome?.trim() || null,
             raca: row.raca?.trim() || null,
             sexo: row.sexo,
-            dataNascimento: row.dataNascimento ? new Date(row.dataNascimento) : null,
+            dataNascimento: row.dataNascimento ? parseLocalDate(row.dataNascimento) : null,
+            dataEntrada: dataEntradaDate,
             pesoEntradaKg: row.pesoEntradaKg,
             custoAquisicao: row.custoAquisicao,
             tipoEntrada: row.tipoEntrada,

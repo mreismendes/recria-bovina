@@ -84,7 +84,13 @@ function normTipoEntrada(val: unknown): "COMPRA_EXTERNA" | "NASCIMENTO_PROPRIO" 
 
 function normDate(val: unknown): string | null {
   if (!val) return null;
-  if (val instanceof Date) return val.toISOString().split("T")[0];
+  if (val instanceof Date) {
+    // Use UTC components to avoid timezone shifts from Excel-parsed dates
+    const y = val.getUTCFullYear();
+    const m = String(val.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(val.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
   const s = String(val).trim();
   const match = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
   if (match) {
@@ -108,7 +114,9 @@ function getCol(r: Record<string, unknown>, ...keys: string[]): unknown {
   return "";
 }
 
-const today = new Date().toISOString().split("T")[0];
+// Use local date components so "today" is always the user's calendar day
+const now = new Date();
+const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
 // ── Component ───────────────────────────────────────────────────────────────
 

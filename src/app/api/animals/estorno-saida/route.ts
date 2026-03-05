@@ -6,6 +6,9 @@
  *   2. Reabre a última pertinência (dataFim = null)
  *   3. Seta animal.status = ATIVO
  *   4. Grava movimentação ESTORNO_SAIDA
+ *
+ * After estorno, the animal can receive a new saída because the old one
+ * is marked estornada=true and the saída route only blocks on non-estornada records.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -31,20 +34,27 @@ export async function POST(req: NextRequest) {
     const { animalId, motivo } = parsed.data;
 
     const resultado = await prisma.$transaction(async (tx) => {
-      // Verificar animal e saída
+      // Verificar animal e buscar saída ativa (não estornada)
       const animal = await tx.animal.findUnique({
         where: { id: animalId },
-        include: { saida: true },
+        include: {
+          saidas: {
+            where: { estornada: false },
+            orderBy: { dataSaida: "desc" },
+            take: 1,
+          },
+        },
       });
 
       if (!animal) throw new Error("Animal não encontrado");
       if (animal.status !== "INATIVO") throw new Error("Animal não está inativo");
-      if (!animal.saida) throw new Error("Animal não possui registro de saída");
-      if (animal.saida.estornada) throw new Error("Saída já foi estornada anteriormente");
+
+      const saidaAtiva = animal.saidas[0];
+      if (!saidaAtiva) throw new Error("Animal não possui registro de saída ativo");
 
       // 1. Marcar saída como estornada
       await tx.saida.update({
-        where: { id: animal.saida.id },
+        where: { id: saidaAtiva.id },
         data: { estornada: true },
       });
 
@@ -67,12 +77,12 @@ export async function POST(req: NextRequest) {
         data: { status: "ATIVO" },
       });
 
-      // 4. Registrar movimentação de estorno
+      // 4. Registrar movimentação de estorno (use the original saída date for context)
       await tx.movimentacao.create({
         data: {
           animalId,
           loteDestinoId: ultimaPertinencia?.loteId ?? null,
-          dataMovimentacao: new Date(),
+          dataMovimentacao: saidaAtiva.dataSaida,
           tipo: "ESTORNO_SAIDA",
           motivo: motivo ?? "Estorno de saída",
         },

@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { animalSchema } from "@/lib/validations";
+import { parseLocalDate } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -62,14 +63,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Brinco já cadastrado" }, { status: 409 });
     }
 
-    const dataEntradaDate = new Date(dataEntrada);
+    // Verificar unicidade do RFID
+    if (animalData.rfid) {
+      const rfidExiste = await prisma.animal.findUnique({ where: { rfid: animalData.rfid } });
+      if (rfidExiste) {
+        return NextResponse.json({ success: false, error: "RFID já cadastrado" }, { status: 409 });
+      }
+    }
+
+    const dataEntradaDate = parseLocalDate(dataEntrada);
 
     // Transação atômica: animal + pesagem de entrada + pertinência + movimentação
     const animal = await prisma.$transaction(async (tx) => {
       const novoAnimal = await tx.animal.create({
         data: {
           ...animalData,
-          dataNascimento: animalData.dataNascimento ? new Date(animalData.dataNascimento) : null,
+          dataEntrada: dataEntradaDate,
+          dataNascimento: animalData.dataNascimento ? parseLocalDate(animalData.dataNascimento) : null,
         },
       });
 

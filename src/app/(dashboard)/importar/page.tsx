@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { format } from "date-fns";
 import { ImportManager } from "./_components/import-manager";
 
 export default async function ImportarPage() {
@@ -24,7 +25,7 @@ export default async function ImportarPage() {
       existingLotes={lotes.map((l) => ({ nome: l.nome, contrato: l.contrato.idContrato }))}
       existingBrincos={animais.map((a) => a.brinco)}
       existingRfids={animais.filter((a) => a.rfid).map((a) => a.rfid!)}
-      existingPesagemKeys={pesagens.map((p) => `${p.animal.brinco}|${p.dataPesagem.toISOString().split("T")[0]}`)}
+      existingPesagemKeys={pesagens.map((p) => `${p.animal.brinco}|${format(p.dataPesagem, "yyyy-MM-dd")}`)}
     />
   );
 }

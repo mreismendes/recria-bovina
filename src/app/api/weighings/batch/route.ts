@@ -5,7 +5,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { calcularGMD } from "@/lib/utils";
+import { calcularGMD, parseLocalDate } from "@/lib/utils";
 import { differenceInDays } from "date-fns";
 import { z } from "zod";
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         const animalId = brincoToId.get(p.brinco.toLowerCase());
         if (!animalId) { puladas++; continue; }
 
-        const dataPesagemDate = new Date(p.dataPesagem);
+        const dataPesagemDate = parseLocalDate(p.dataPesagem);
 
         // RN-02: skip duplicates
         const existente = await tx.pesagem.findUnique({

@@ -9,11 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { animaisApi } from "@/lib/api";
+import { todayLocalStr } from "@/lib/utils";
 
 type Lote = { id: string; nome: string; contrato: { nomeFazenda: string } };
 type Animal = { id: string; brinco: string; nome?: string | null };
 
-const today = new Date().toISOString().split("T")[0];
+const today = todayLocalStr();
 
 export function MovimentacaoSheet({
   open,

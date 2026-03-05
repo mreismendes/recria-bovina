@@ -10,7 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Separator } from "@/components/ui/separator";
 import { Scale, TrendingUp, TrendingDown, Minus, ArrowRight } from "lucide-react";
 import { pesagensApi } from "@/lib/api";
-import { formatPeso, formatCurrency, formatDate } from "@/lib/utils";
+import { formatPeso, formatCurrency, formatDate, todayLocalStr } from "@/lib/utils";
 
 type Lote = { id: string; nome: string; contrato: { nomeFazenda: string } };
 type AnimalNoLote = {
@@ -44,7 +44,7 @@ type ResultadoPesagem = {
   ganhoKg: number | null;
 };
 
-const today = new Date().toISOString().split("T")[0];
+const today = todayLocalStr();
 
 export function PesagensManager({
   lotes,

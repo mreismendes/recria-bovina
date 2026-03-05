@@ -12,8 +12,9 @@ export const config = {
      *  - /login
      *  - /api/auth/* (NextAuth routes)
      *  - /_next/*    (Next.js internals)
-     *  - /favicon.ico, static files
+     *  - /favicon.ico
+     *  - Public static files (e.g. /modelo-importacao.xlsx)
      */
-    "/((?!login|api/auth|_next/static|_next/image|favicon\\.ico).*)",
+    "/((?!login|api/auth|_next/static|_next/image|favicon\\.ico|.*\\.(?:xlsx|csv|pdf|png|jpg|jpeg|svg|ico)$).*)",
   ],
 };

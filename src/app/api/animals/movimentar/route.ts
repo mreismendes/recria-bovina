@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { movimentacaoSchema } from "@/lib/validations";
+import { parseLocalDate } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { animalIds, loteDestinoId, dataMovimentacao, motivo, observacoes } = parsed.data;
-    const dataDate = new Date(dataMovimentacao);
+    const dataDate = parseLocalDate(dataMovimentacao);
 
     // Validar que o lote destino existe e está ativo
     const loteDestino = await prisma.lote.findUnique({ where: { id: loteDestinoId } });
@@ -48,6 +49,11 @@ export async function POST(req: NextRequest) {
 
         // Não mover se já está no lote destino
         if (pertinenciaAtual?.loteId === loteDestinoId) continue;
+
+        // Validar cronologia: data de movimentação deve ser >= início da pertinência atual
+        if (pertinenciaAtual && dataDate < pertinenciaAtual.dataInicio) {
+          continue; // silently skip — cannot move before lot entry date
+        }
 
         // 1. Fechar pertinência atual
         if (pertinenciaAtual) {
