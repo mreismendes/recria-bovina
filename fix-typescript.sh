@@ -1,3 +1,26 @@
+#!/bin/bash
+# fix-typescript.sh
+# Rodar dentro da pasta recria-bovina no terminal
+# Corrige os erros de TypeScript no CI
+
+set -e
+
+echo "📦 Verificando que estamos na pasta certa..."
+if [ ! -f "package.json" ]; then
+  echo "❌ ERRO: Não encontrei package.json. Rode este script dentro da pasta recria-bovina."
+  echo "   Exemplo: cd ~/Downloads/recria-bovina && bash fix-typescript.sh"
+  exit 1
+fi
+
+echo "1/4 — Criando .eslintrc.json..."
+cat > .eslintrc.json << 'EOF'
+{
+  "extends": "next/core-web-vitals"
+}
+EOF
+
+echo "2/4 — Corrigindo src/lib/utils.ts..."
+cat > src/lib/utils.ts << 'EOF'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { format, differenceInDays } from 'date-fns'
@@ -40,3 +63,61 @@ export function calcularGMD(pesoInicial: number, pesoFinal: number, dias: number
   if (dias <= 0) return 0
   return (pesoFinal - pesoInicial) / dias
 }
+EOF
+
+echo "3/4 — Corrigindo src/app/(dashboard)/animais/page.tsx..."
+cat > "src/app/(dashboard)/animais/page.tsx" << 'EOF'
+import { prisma } from "@/lib/prisma";
+import { AnimaisManager } from "./_components/animais-manager";
+
+export default async function AnimaisPage() {
+  const [animaisRaw, lotes] = await Promise.all([
+    prisma.animal.findMany({
+      where: { status: "ATIVO" },
+      orderBy: { brinco: "asc" },
+      include: {
+        pertinencias: {
+          where: { dataFim: null },
+          include: { lote: { include: { propriedade: { select: { nome: true } } } } },
+        },
+        pesagens: {
+          orderBy: { dataPesagem: "desc" },
+          take: 1,
+        },
+      },
+    }),
+    prisma.lote.findMany({
+      where: { ativo: true },
+      orderBy: { nome: "asc" },
+      include: { propriedade: { select: { nome: true } } },
+    }),
+  ]);
+
+  // Serializa Date → string para o client component
+  const animais = animaisRaw.map(a => ({
+    ...a,
+    dataNascimento: a.dataNascimento?.toISOString() ?? null,
+    pertinencias: a.pertinencias.map(p => ({
+      lote: { id: p.lote.id, nome: p.lote.nome, propriedade: p.lote.propriedade },
+      dataInicio: p.dataInicio.toISOString(),
+      dataFim: p.dataFim?.toISOString() ?? null,
+    })),
+    pesagens: a.pesagens.map(ps => ({
+      id: ps.id,
+      pesoKg: ps.pesoKg,
+      dataPesagem: ps.dataPesagem.toISOString(),
+      gmdPeriodo: ps.gmdPeriodo ?? null,
+    })),
+  }));
+
+  return <AnimaisManager initialAnimais={animais} lotes={lotes} />;
+}
+EOF
+
+echo "4/4 — Enviando para o GitHub..."
+git add -A
+git commit -m "fix: corrige erros TypeScript (exports PT-BR, serialização de datas, eslint config)"
+git push
+
+echo ""
+echo "✅ Pronto! Verifique o CI em: https://github.com/mreismendes/recria-bovina/actions"
