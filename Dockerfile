@@ -29,7 +29,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts ./scripts
 
 USER nextjs
 
@@ -37,4 +39,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["/bin/sh", "-c", "echo '>>> Running migrations...' && node ./node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma && echo '>>> Migrations done' && exec node server.js"]
+CMD ["/bin/sh", "-c", "echo '>>> Running migrations...' && node ./node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma && echo '>>> Migrations done' && node ./scripts/create-admin.js && exec node server.js"]

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Beef, Layers, Scale, Wheat, Pill, Package, Building2, Upload, Download, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Beef, Layers, Scale, Wheat, Pill, Package, Building2, Upload, Download, ChevronRight, Users } from "lucide-react";
 
 const navItems = [
   { label: "Painel",         href: "/dashboard",     icon: LayoutDashboard },
@@ -23,6 +24,8 @@ const configItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
 
   const NavLink = ({ item }: { item: typeof navItems[0] }) => {
     const isActive = pathname.startsWith(item.href);
@@ -57,6 +60,7 @@ export function Sidebar() {
             <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cadastros</p>
             <div className="space-y-1">
               {configItems.map(item => <NavLink key={item.href} item={item} />)}
+              {isAdmin && <NavLink item={{ label: "Usuários", href: "/usuarios", icon: Users }} />}
             </div>
           </div>
         </div>

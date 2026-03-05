@@ -79,3 +79,12 @@ export const pesagensApi = {
   },
   registrarSessao: (data: unknown) => apiFetch<any[]>("/api/weighings", { method: "POST", body: JSON.stringify(data) }),
 };
+
+// ── Usuários ─────────────────────────────────────────────────────────────────
+
+export const usersApi = {
+  list: () => apiFetch<any[]>("/api/users"),
+  create: (data: unknown) => apiFetch<any>("/api/users", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: string, data: unknown) => apiFetch<any>(`/api/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deactivate: (id: string) => apiFetch<any>(`/api/users/${id}`, { method: "DELETE" }),
+};
