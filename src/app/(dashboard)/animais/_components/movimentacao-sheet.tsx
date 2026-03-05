@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { animaisApi } from "@/lib/api";
 
 type Lote = { id: string; nome: string; contrato: { nomeFazenda: string } };
@@ -38,6 +39,24 @@ export function MovimentacaoSheet({
 
   // Filtrar lotes disponíveis (excluir lote atual)
   const lotesDisponiveis = lotes.filter((l) => l.id !== loteAtualId);
+
+  // Agrupar lotes por contrato (nomeFazenda)
+  const lotesAgrupados = useMemo(() => {
+    const grupos: Record<string, Lote[]> = {};
+    for (const lote of lotesDisponiveis) {
+      const fazenda = lote.contrato.nomeFazenda;
+      if (!grupos[fazenda]) grupos[fazenda] = [];
+      grupos[fazenda].push(lote);
+    }
+    return Object.entries(grupos).sort(([a], [b]) => a.localeCompare(b));
+  }, [lotesDisponiveis]);
+
+  // Detectar se destino é de outro contrato
+  const loteAtual = lotes.find((l) => l.id === loteAtualId);
+  const loteDestino = lotes.find((l) => l.id === loteDestinoId);
+  const isCrossContrato =
+    loteAtual && loteDestino &&
+    loteAtual.contrato.nomeFazenda !== loteDestino.contrato.nomeFazenda;
 
   async function handleSubmit() {
     if (!loteDestinoId) {
@@ -88,7 +107,7 @@ export function MovimentacaoSheet({
             </div>
           </div>
 
-          {/* Lote destino */}
+          {/* Lote destino — agrupado por contrato */}
           <div>
             <label className="text-sm font-medium">Lote de destino *</label>
             <Select value={loteDestinoId} onValueChange={setLoteDestinoId}>
@@ -96,10 +115,17 @@ export function MovimentacaoSheet({
                 <SelectValue placeholder="Selecione o lote" />
               </SelectTrigger>
               <SelectContent>
-                {lotesDisponiveis.map((l) => (
-                  <SelectItem key={l.id} value={l.id}>
-                    {l.nome} — {l.contrato.nomeFazenda}
-                  </SelectItem>
+                {lotesAgrupados.map(([fazenda, lotesDoContrato]) => (
+                  <SelectGroup key={fazenda}>
+                    <SelectLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      {fazenda}
+                    </SelectLabel>
+                    {lotesDoContrato.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        {l.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
@@ -109,6 +135,21 @@ export function MovimentacaoSheet({
               </p>
             )}
           </div>
+
+          {/* Alerta de movimentação entre contratos */}
+          {isCrossContrato && (
+            <div className="flex gap-2 items-start bg-amber-50 border border-amber-200 rounded-md p-3">
+              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+              <div className="text-sm text-amber-800">
+                <p className="font-medium">Movimentação entre contratos</p>
+                <p className="text-xs mt-0.5">
+                  De <strong>{loteAtual!.contrato.nomeFazenda}</strong> para{" "}
+                  <strong>{loteDestino!.contrato.nomeFazenda}</strong>.
+                  Os custos futuros serão rateados pelo novo lote/contrato.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Data */}
           <div>
