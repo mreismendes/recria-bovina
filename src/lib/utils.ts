@@ -9,9 +9,9 @@ export function formatWeight(kg: number) { return `${kg.toLocaleString('pt-BR', 
 export function formatGmd(gmd: number) { return `${gmd.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 3 })} kg/dia` }
 export function calcArrobas(gainKg: number) { return gainKg / 15 }
 export function daysBetween(a: Date, b: Date) { return Math.abs(differenceInDays(b, a)) }
-export const SEX_LABEL: Record<string,string> = { MALE:'Macho', FEMALE:'Fêmea' }
-export const ENTRY_TYPE_LABEL: Record<string,string> = { PURCHASE:'Compra', OWN_BIRTH:'Nascimento próprio', TRANSFER_IN:'Transferência de entrada' }
-export const EXIT_TYPE_LABEL: Record<string,string> = { SALE:'Venda', DEATH:'Morte', TRANSFER_OUT:'Transferência de saída', DISCARD:'Descarte' }
+export const SEX_LABEL: Record<string,string> = { MACHO:'Macho', FEMEA:'Fêmea' }
+export const ENTRY_TYPE_LABEL: Record<string,string> = { COMPRA_EXTERNA:'Compra externa', NASCIMENTO_PROPRIO:'Nascimento próprio', TRANSFERENCIA_INTERNA:'Transferência interna' }
+export const EXIT_TYPE_LABEL: Record<string,string> = { VENDA:'Venda', MORTE:'Morte', TRANSFERENCIA_EXTERNA:'Transferência externa', DESCARTE:'Descarte' }
 export const ANIMAL_CATEGORY_LABEL: Record<string,string> = { GARROTE:'Garrote', NOVILHO:'Novilho', NOVILHA:'Novilha', BEZERRA:'Bezerra', BEZERRO:'Bezerro', VACA_RECRIA:'Vaca (recria)' }
 export const PRODUCT_TYPE_LABEL: Record<string,string> = {
   SUPLEMENTO_MINERAL: 'Suplemento Mineral',
@@ -27,10 +27,10 @@ export const PRODUCT_TYPE_LABEL: Record<string,string> = {
   SUPPLEMENT: 'Suplemento',
   MEDICATION: 'Medicamento',
 }
-export const LOT_STATUS_LABEL: Record<string,string> = { ACTIVE:'Ativo', INACTIVE:'Inativo' }
-export const ANIMAL_STATUS_LABEL: Record<string,string> = { ACTIVE:'Ativo', INACTIVE:'Baixado' }
+export const LOT_STATUS_LABEL: Record<string,string> = { ATIVO:'Ativo', INATIVO:'Inativo' }
+export const ANIMAL_STATUS_LABEL: Record<string,string> = { ATIVO:'Ativo', INATIVO:'Baixado' }
 export function getStatusColor(status: string) {
-  const m: Record<string,string> = { ACTIVE:'bg-green-100 text-green-800', INACTIVE:'bg-gray-100 text-gray-600', MALE:'bg-blue-100 text-blue-800', FEMALE:'bg-pink-100 text-pink-800', SUPPLEMENT:'bg-amber-100 text-amber-800', MEDICATION:'bg-red-100 text-red-800' }
+  const m: Record<string,string> = { ATIVO:'bg-green-100 text-green-800', INATIVO:'bg-gray-100 text-gray-600', MACHO:'bg-blue-100 text-blue-800', FEMEA:'bg-pink-100 text-pink-800', SUPPLEMENT:'bg-amber-100 text-amber-800', MEDICATION:'bg-red-100 text-red-800' }
   return m[status] ?? 'bg-gray-100 text-gray-600'
 }
 export function isWithdrawalActive(d: Date) { return d > new Date() }

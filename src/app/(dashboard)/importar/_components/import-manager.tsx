@@ -242,11 +242,11 @@ export function ImportManager({
       const newContrato = ctr ? !contratoSet.has(ctr.toLowerCase()) : false;
       const newLote = ctr && lote ? !loteSet.has(`${ctr.toLowerCase()}|${lote.toLowerCase()}`) : false;
 
-      if (newContrato && status !== "error") {
-        msgs.push(`Contrato não encontrado`);
-        if (status === "ok") status = "warning";
+      if (newContrato) {
+        msgs.push(`Contrato "${ctr}" não encontrado`);
+        status = "error";
       }
-      if (newLote && status !== "error") {
+      if (newLote && !newContrato && status !== "error") {
         msgs.push(`Lote "${lote}" será criado`);
         if (status === "ok") status = "warning";
       }
@@ -398,9 +398,6 @@ export function ImportManager({
           )}
         </div>
 
-        {result.animais?.lotesCriados && result.animais.lotesCriados.length > 0 && (
-          <p className="text-sm text-gray-600"><span className="font-medium">Lotes criados:</span> {result.animais.lotesCriados.join(", ")}</p>
-        )}
         {result.animais?.lotesCriados && result.animais.lotesCriados.length > 0 && (
           <p className="text-sm text-gray-600"><span className="font-medium">Lotes criados:</span> {result.animais.lotesCriados.join(", ")}</p>
         )}
