@@ -233,7 +233,7 @@ function ExportPesagens({ lotes }: { lotes: Lote[] }) {
 // ── Exportar Lotes ──────────────────────────────────────────────────────────
 
 function ExportLotes({ contratos }: { contratos: Contrato[] }) {
-  const [contratoIds, setPropIds] = useState<string[]>([]);
+  const [contratoIds, setContratoIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>(["ATIVO"]);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -279,7 +279,7 @@ function ExportLotes({ contratos }: { contratos: Contrato[] }) {
             className="mt-1"
             options={contratos.map((c) => ({ value: c.id, label: c.idContrato + " — " + c.nomeFazenda }))}
             selected={contratoIds}
-            onChange={(v) => { setPropIds(v); setMsg(null); }}
+            onChange={(v) => { setContratoIds(v); setMsg(null); }}
             allLabel="Todas"
           />
         </div>
