@@ -22,5 +22,12 @@ export default async function UsuariosPage() {
     orderBy: { name: "asc" },
   });
 
-  return <UsuariosManager initialData={users} currentUserId={session.user.id} />;
+  // Serialize Date objects for the client component boundary
+  const serialized = users.map((u) => ({
+    ...u,
+    createdAt: u.createdAt.toISOString(),
+    updatedAt: u.updatedAt.toISOString(),
+  }));
+
+  return <UsuariosManager initialData={serialized} currentUserId={session.user.id} />;
 }
