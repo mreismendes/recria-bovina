@@ -25,6 +25,7 @@ const importRowSchema = z.object({
   tipoEntrada: z.enum(["COMPRA_EXTERNA", "NASCIMENTO_PROPRIO", "TRANSFERENCIA_INTERNA"]).default("COMPRA_EXTERNA"),
   origem: z.string().max(200).optional().nullable(),
   gta: z.string().max(100).optional().nullable(),
+  notaFiscal: z.string().max(100).optional().nullable(),
   dataEntrada: z.string().min(1),
   observacoes: z.string().max(500).optional().nullable(),
 });
@@ -136,6 +137,7 @@ export async function POST(req: NextRequest) {
             tipoEntrada: row.tipoEntrada,
             origem: row.origem?.trim() || null,
             gtaEntrada: row.gta?.trim() || null,
+            notaFiscal: row.notaFiscal?.trim() || null,
             observacoes: row.observacoes?.trim() || null,
           },
         });

@@ -29,6 +29,7 @@ type ValidatedAnimalRow = {
     tipoEntrada: "COMPRA_EXTERNA" | "NASCIMENTO_PROPRIO" | "TRANSFERENCIA_INTERNA";
     origem: string | null;
     gta: string | null;
+    notaFiscal: string | null;
     dataEntrada: string;
     observacoes: string | null;
   };
@@ -216,6 +217,7 @@ export function ImportManager({
       const tipo = normTipoEntrada(getCol(r, "Tipo Entrada", "tipo entrada", "Tipo entrada"));
       const origem = String(getCol(r, "Origem", "origem")).trim() || null;
       const gta = String(getCol(r, "GTA", "gta")).trim() || null;
+      const notaFiscal = String(getCol(r, "Nota Fiscal", "nota fiscal", "notaFiscal", "NF")).trim() || null;
       const dataEnt = normDate(getCol(r, "Data Entrada", "data entrada", "Data entrada")) ?? today;
       const obs = String(getCol(r, "Observações", "Observacoes", "observações", "observacoes")).trim() || null;
 
@@ -257,7 +259,7 @@ export function ImportManager({
         messages: msgs,
         newContrato,
         newLote,
-        data: { contrato: ctr, lote, brinco, rfid, nome, raca, sexo, dataNascimento: dataNasc, pesoEntradaKg: peso, custoAquisicao: custo, tipoEntrada: tipo, origem, gta, dataEntrada: dataEnt, observacoes: obs },
+        data: { contrato: ctr, lote, brinco, rfid, nome, raca, sexo, dataNascimento: dataNasc, pesoEntradaKg: peso, custoAquisicao: custo, tipoEntrada: tipo, origem, gta, notaFiscal, dataEntrada: dataEnt, observacoes: obs },
       });
     }
     return validated;

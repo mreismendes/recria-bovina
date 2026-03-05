@@ -96,6 +96,7 @@ model Animal {
   tipoEntrada    TipoEntrada
   origem         String?      // propriedade / municipio de origem
   gtaEntrada     String?
+  notaFiscal     String?      // número da nota fiscal de entrada
   status         AnimalStatus @default(ATIVO)
   observacoes    String?
 

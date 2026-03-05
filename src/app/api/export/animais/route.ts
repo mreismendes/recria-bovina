@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
         tipoEntrada: { COMPRA_EXTERNA: "Compra externa", NASCIMENTO_PROPRIO: "Nascimento próprio", TRANSFERENCIA_INTERNA: "Transferência" }[a.tipoEntrada] ?? a.tipoEntrada,
         origem: a.origem ?? "",
         gta: a.gtaEntrada ?? "",
+        notaFiscal: a.notaFiscal ?? "",
         loteAtual: pert?.lote.nome ?? "",
         fazenda: pert?.lote.contrato.nomeFazenda ?? "",
         status: a.status === "ATIVO" ? "Ativo" : "Inativo",
