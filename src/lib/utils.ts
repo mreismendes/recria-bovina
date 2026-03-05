@@ -13,7 +13,20 @@ export const SEX_LABEL: Record<string,string> = { MALE:'Macho', FEMALE:'Fêmea' 
 export const ENTRY_TYPE_LABEL: Record<string,string> = { PURCHASE:'Compra', OWN_BIRTH:'Nascimento próprio', TRANSFER_IN:'Transferência de entrada' }
 export const EXIT_TYPE_LABEL: Record<string,string> = { SALE:'Venda', DEATH:'Morte', TRANSFER_OUT:'Transferência de saída', DISCARD:'Descarte' }
 export const ANIMAL_CATEGORY_LABEL: Record<string,string> = { GARROTE:'Garrote', NOVILHO:'Novilho', NOVILHA:'Novilha', BEZERRA:'Bezerra', BEZERRO:'Bezerro', VACA_RECRIA:'Vaca (recria)' }
-export const PRODUCT_TYPE_LABEL: Record<string,string> = { SUPPLEMENT:'Suplemento', MEDICATION:'Medicamento' }
+export const PRODUCT_TYPE_LABEL: Record<string,string> = {
+  SUPLEMENTO_MINERAL: 'Suplemento Mineral',
+  SUPLEMENTO_PROTEICO: 'Suplemento Proteico',
+  SUPLEMENTO_ENERGETICO: 'Suplemento Energético',
+  SUPLEMENTO_MISTO: 'Suplemento Misto',
+  VERMIFUGO: 'Vermífugo',
+  CARRAPATICIDA: 'Carrapaticida',
+  VACINA: 'Vacina',
+  ANTIBIOTICO: 'Antibiótico',
+  VITAMINA: 'Vitamina',
+  OUTRO_MEDICAMENTO: 'Outro Medicamento',
+  SUPPLEMENT: 'Suplemento',
+  MEDICATION: 'Medicamento',
+}
 export const LOT_STATUS_LABEL: Record<string,string> = { ACTIVE:'Ativo', INACTIVE:'Inativo' }
 export const ANIMAL_STATUS_LABEL: Record<string,string> = { ACTIVE:'Ativo', INACTIVE:'Baixado' }
 export function getStatusColor(status: string) {
