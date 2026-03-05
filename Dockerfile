@@ -1,5 +1,5 @@
-# ── Build stage ────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+# ── Build stage (Debian, same family as runner) ────────────────
+FROM node:20-bookworm AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
