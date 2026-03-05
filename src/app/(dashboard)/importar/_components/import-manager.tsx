@@ -29,6 +29,7 @@ type ValidatedAnimalRow = {
     tipoEntrada: "COMPRA_EXTERNA" | "NASCIMENTO_PROPRIO" | "TRANSFERENCIA_INTERNA";
     origem: string | null;
     gta: string | null;
+    notaFiscal: string | null;
     dataEntrada: string;
     observacoes: string | null;
   };
@@ -216,6 +217,7 @@ export function ImportManager({
       const tipo = normTipoEntrada(getCol(r, "Tipo Entrada", "tipo entrada", "Tipo entrada"));
       const origem = String(getCol(r, "Origem", "origem")).trim() || null;
       const gta = String(getCol(r, "GTA", "gta")).trim() || null;
+      const notaFiscal = String(getCol(r, "Nota Fiscal", "nota fiscal", "notaFiscal", "NF")).trim() || null;
       const dataEnt = normDate(getCol(r, "Data Entrada", "data entrada", "Data entrada")) ?? today;
       const obs = String(getCol(r, "Observações", "Observacoes", "observações", "observacoes")).trim() || null;
 
@@ -242,11 +244,11 @@ export function ImportManager({
       const newContrato = ctr ? !contratoSet.has(ctr.toLowerCase()) : false;
       const newLote = ctr && lote ? !loteSet.has(`${ctr.toLowerCase()}|${lote.toLowerCase()}`) : false;
 
-      if (newContrato && status !== "error") {
-        msgs.push(`Contrato não encontrado`);
-        if (status === "ok") status = "warning";
+      if (newContrato) {
+        msgs.push(`Contrato "${ctr}" não encontrado`);
+        status = "error";
       }
-      if (newLote && status !== "error") {
+      if (newLote && !newContrato && status !== "error") {
         msgs.push(`Lote "${lote}" será criado`);
         if (status === "ok") status = "warning";
       }
@@ -257,7 +259,7 @@ export function ImportManager({
         messages: msgs,
         newContrato,
         newLote,
-        data: { contrato: ctr, lote, brinco, rfid, nome, raca, sexo, dataNascimento: dataNasc, pesoEntradaKg: peso, custoAquisicao: custo, tipoEntrada: tipo, origem, gta, dataEntrada: dataEnt, observacoes: obs },
+        data: { contrato: ctr, lote, brinco, rfid, nome, raca, sexo, dataNascimento: dataNasc, pesoEntradaKg: peso, custoAquisicao: custo, tipoEntrada: tipo, origem, gta, notaFiscal, dataEntrada: dataEnt, observacoes: obs },
       });
     }
     return validated;
@@ -398,9 +400,6 @@ export function ImportManager({
           )}
         </div>
 
-        {result.animais?.lotesCriados && result.animais.lotesCriados.length > 0 && (
-          <p className="text-sm text-gray-600"><span className="font-medium">Lotes criados:</span> {result.animais.lotesCriados.join(", ")}</p>
-        )}
         {result.animais?.lotesCriados && result.animais.lotesCriados.length > 0 && (
           <p className="text-sm text-gray-600"><span className="font-medium">Lotes criados:</span> {result.animais.lotesCriados.join(", ")}</p>
         )}

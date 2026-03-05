@@ -26,7 +26,7 @@ type Pertinencia = { lote: Lote; dataInicio: string; dataFim?: string | null };
 type Animal = {
   id: string; brinco: string; rfid?: string | null; nome?: string | null; raca?: string | null;
   sexo: string; dataNascimento?: string | null; pesoEntradaKg: number; custoAquisicao: number;
-  tipoEntrada: string; origem?: string | null; status: string; observacoes?: string | null;
+  tipoEntrada: string; origem?: string | null; notaFiscal?: string | null; status: string; observacoes?: string | null;
   pertinencias: Pertinencia[];
   pesagens: Pesagem[];
 };
@@ -51,8 +51,8 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
     defaultValues: {
       brinco: "", rfid: "", nome: "", raca: "", sexo: "MACHO",
       dataNascimento: "", pesoEntradaKg: undefined as any,
-      custoAquisicao: 0, tipoEntrada: "COMPRA_EXTERNA",
-      origem: "", gtaEntrada: "", loteId: lotes[0]?.id ?? "", dataEntrada: today,
+      custoAquisicao: undefined as any, tipoEntrada: "COMPRA_EXTERNA",
+      origem: "", gtaEntrada: "", notaFiscal: "", loteId: lotes[0]?.id ?? "", dataEntrada: today,
       observacoes: "",
     },
   });
@@ -72,8 +72,8 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
     setEditing(null);
     form.reset({
       brinco: "", rfid: "", nome: "", raca: "", sexo: "MACHO", dataNascimento: "",
-      pesoEntradaKg: undefined as any, custoAquisicao: 0, tipoEntrada: "COMPRA_EXTERNA",
-      origem: "", gtaEntrada: "", loteId: lotes[0]?.id ?? "", dataEntrada: today, observacoes: "",
+      pesoEntradaKg: undefined as any, custoAquisicao: undefined as any, tipoEntrada: "COMPRA_EXTERNA",
+      origem: "", gtaEntrada: "", notaFiscal: "", loteId: lotes[0]?.id ?? "", dataEntrada: today, observacoes: "",
     });
     setError(null);
     setSheetOpen(true);
@@ -86,6 +86,7 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
       sexo: item.sexo as any, dataNascimento: item.dataNascimento?.toString().split("T")[0] ?? "",
       pesoEntradaKg: item.pesoEntradaKg, custoAquisicao: item.custoAquisicao,
       tipoEntrada: item.tipoEntrada as any, origem: item.origem ?? "", gtaEntrada: "",
+      notaFiscal: item.notaFiscal ?? "",
       loteId: item.pertinencias[0]?.lote.id ?? lotes[0]?.id ?? "",
       dataEntrada: today, observacoes: item.observacoes ?? "",
     });
@@ -99,7 +100,7 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
       if (editing) {
         // On edit: only update mutable fields
         const updated = await animaisApi.update(editing.id, {
-          nome: data.nome, raca: data.raca, rfid: data.rfid, observacoes: data.observacoes,
+          nome: data.nome, raca: data.raca, rfid: data.rfid, notaFiscal: data.notaFiscal, observacoes: data.observacoes,
         });
         setItems(items.map(i => i.id === editing.id ? { ...i, ...updated } : i));
       } else {
@@ -444,7 +445,7 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
                             <FormLabel>Custo de aquisição (R$)</FormLabel>
                             <FormControl>
                               <Input type="number" step="0.01" min={0} placeholder="0,00" {...field}
-                                value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : +e.target.value)} />
+                                value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? undefined : +e.target.value)} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -459,16 +460,35 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
                         </FormItem>
                       )} />
 
-                      <FormField control={form.control} name="gtaEntrada" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Número da GTA</FormLabel>
-                          <FormControl><Input placeholder="Ex: GTA-2025-001" {...field} value={field.value ?? ""} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField control={form.control} name="gtaEntrada" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Número da GTA</FormLabel>
+                            <FormControl><Input placeholder="Ex: GTA-2025-001" {...field} value={field.value ?? ""} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="notaFiscal" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nota Fiscal</FormLabel>
+                            <FormControl><Input placeholder="Ex: NF-e 12345" {...field} value={field.value ?? ""} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
                     </div>
                   </div>
                 </>}
+
+                {editing && (
+                  <FormField control={form.control} name="notaFiscal" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nota Fiscal</FormLabel>
+                      <FormControl><Input placeholder="Ex: NF-e 12345" {...field} value={field.value ?? ""} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                )}
 
                 <Separator />
                 <FormField control={form.control} name="observacoes" render={({ field }) => (

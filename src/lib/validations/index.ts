@@ -21,6 +21,7 @@ export const animalSchema = z.object({
   tipoEntrada: z.enum(["COMPRA_EXTERNA", "NASCIMENTO_PROPRIO", "TRANSFERENCIA_INTERNA"]),
   origem: z.string().max(200).optional().nullable(),
   gtaEntrada: z.string().max(100).optional().nullable(),
+  notaFiscal: z.string().max(100).optional().nullable(),
   loteId: z.string().min(1, "Lote é obrigatório"),
   dataEntrada: z.string().min(1, "Data de entrada é obrigatória"),
   observacoes: z.string().max(500).optional().nullable(),

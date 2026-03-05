@@ -6,6 +6,7 @@ const updateSchema = z.object({
   nome:        z.string().max(100).optional().nullable(),
   raca:        z.string().max(100).optional().nullable(),
   rfid:        z.string().max(100).optional().nullable(),
+  notaFiscal:  z.string().max(100).optional().nullable(),
   observacoes: z.string().max(500).optional().nullable(),
 });
 
