@@ -36,7 +36,13 @@ async function main() {
     data: {
       idContrato: "RCA-2025-001",
       nomeFazenda: "Fazenda Santa Fé",
-      observacoes: "Parceria agrosilvopastoral — Uberaba/MG",
+      proprietario: "João da Silva",
+      comunidade: "Comunidade Rural São José",
+      cidade: "Uberaba",
+      estado: "MG",
+      formato: "PARCERIA",
+      areaHectares: 320.5,
+      observacoes: "Parceria agrosilvopastoral",
     },
   });
   console.log("✅ Contrato criado");

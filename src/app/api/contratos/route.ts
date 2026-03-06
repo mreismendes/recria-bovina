@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { idContrato, nomeFazenda, observacoes } = body;
+    const { idContrato, nomeFazenda, proprietario, comunidade, cidade, estado, formato, areaHectares, observacoes } = body;
 
     if (!idContrato || !nomeFazenda) {
       return NextResponse.json({ success: false, error: "ID do Contrato e Nome da Fazenda são obrigatórios" }, { status: 400 });
@@ -28,7 +28,17 @@ export async function POST(req: NextRequest) {
     }
 
     const contrato = await prisma.contrato.create({
-      data: { idContrato, nomeFazenda, observacoes: observacoes || null },
+      data: {
+        idContrato,
+        nomeFazenda,
+        proprietario: proprietario || null,
+        comunidade: comunidade || null,
+        cidade: cidade || null,
+        estado: estado || null,
+        formato: formato || null,
+        areaHectares: areaHectares != null ? Number(areaHectares) : null,
+        observacoes: observacoes || null,
+      },
     });
     return NextResponse.json({ success: true, data: contrato }, { status: 201 });
   } catch {
