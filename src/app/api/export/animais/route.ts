@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       include: {
         pertinencias: {
           where: { dataFim: null },
-          include: { lote: { include: { contrato: { select: { nomeFazenda: true } } } } },
+          include: { lote: { include: { contrato: { select: { nomeFazenda: true } }, grupoContrato: { select: { nome: true } } } } },
           take: 1,
         },
       },
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
         gta: a.gtaEntrada ?? "",
         notaFiscal: a.notaFiscal ?? "",
         loteAtual: pert?.lote.nome ?? "",
-        fazenda: pert?.lote.contrato.nomeFazenda ?? "",
+        fazenda: pert?.lote.contrato?.nomeFazenda ?? pert?.lote.grupoContrato?.nome ?? "",
         status: a.status === "ATIVO" ? "Ativo" : "Inativo",
         observacoes: a.observacoes ?? "",
       };

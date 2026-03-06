@@ -2,16 +2,18 @@ import { prisma } from "@/lib/prisma";
 import { LotesManager } from "./_components/lotes-manager";
 
 export default async function LotesPage() {
-  const [lotes, contratos] = await Promise.all([
+  const [lotes, contratos, grupos] = await Promise.all([
     prisma.lote.findMany({
       where: { ativo: true },
       orderBy: { nome: "asc" },
       include: {
         contrato: true,
+        grupoContrato: { select: { id: true, nome: true } },
         pertinencias: { where: { dataFim: null }, select: { id: true } },
       },
     }),
     prisma.contrato.findMany({ where: { ativo: true }, orderBy: { idContrato: "asc" } }),
+    prisma.grupoContrato.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
   ]);
-  return <LotesManager initialLotes={lotes} contratos={contratos} />;
+  return <LotesManager initialLotes={lotes} contratos={contratos} grupos={grupos} />;
 }

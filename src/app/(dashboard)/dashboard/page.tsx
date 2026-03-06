@@ -24,6 +24,7 @@ async function getDashboardStats() {
     where: { ativo: true },
     include: {
       contrato: true,
+      grupoContrato: { select: { id: true, nome: true } },
       pertinencias: {
         where: { dataFim: null },
         select: { id: true },
@@ -83,7 +84,7 @@ export default async function DashboardPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {["Lote", "Fazenda (Contrato)", "Cabeças", "Criado em"].map((h) => (
+                {["Lote", "Fazenda / Grupo", "Cabeças", "Criado em"].map((h) => (
                   <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
@@ -92,7 +93,7 @@ export default async function DashboardPage() {
               {stats.lotes.map((lote) => (
                 <tr key={lote.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{lote.nome}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{lote.contrato.nomeFazenda}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{lote.contrato?.nomeFazenda ?? lote.grupoContrato?.nome ?? ""}</td>
                   <td className="px-6 py-4 text-sm text-gray-900 font-semibold">{lote.pertinencias.length}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{formatDate(lote.createdAt)}</td>
                 </tr>

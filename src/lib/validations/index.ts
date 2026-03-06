@@ -162,13 +162,34 @@ export const produtoSchema = z.object({
 export type ProdutoFormData = z.infer<typeof produtoSchema>;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GRUPO DE CONTRATOS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const grupoContratoSchema = z.object({
+  nome: z.string().min(1, "Nome é obrigatório").max(200),
+  descricao: z.string().max(500).optional().nullable(),
+});
+
+export type GrupoContratoFormData = z.infer<typeof grupoContratoSchema>;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // LOTE
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const loteSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório").max(200),
-  descricao: z.string().max(500).optional().nullable(),
-  contratoId: z.string().min(1, "Contrato é obrigatório"),
-});
+export const loteSchema = z
+  .object({
+    nome: z.string().min(1, "Nome é obrigatório").max(200),
+    descricao: z.string().max(500).optional().nullable(),
+    contratoId: z.string().optional().nullable(),
+    grupoContratoId: z.string().optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      const hasContrato = !!data.contratoId;
+      const hasGrupo = !!data.grupoContratoId;
+      return hasContrato !== hasGrupo; // XOR: exactly one must be set
+    },
+    { message: "Informe um Contrato ou um Grupo de Contratos (não ambos)", path: ["contratoId"] }
+  );
 
 export type LoteFormData = z.infer<typeof loteSchema>;

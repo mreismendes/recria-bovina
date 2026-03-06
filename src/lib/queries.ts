@@ -16,7 +16,7 @@ import { prisma } from "./prisma";
 export async function getLoteAtualDoAnimal(animalId: string) {
   return prisma.pertinenciaLote.findFirst({
     where: { animalId, dataFim: null },
-    include: { lote: { include: { contrato: true } } },
+    include: { lote: { include: { contrato: true, grupoContrato: true } } },
   });
 }
 
@@ -157,7 +157,7 @@ export async function getResumoDeLote(loteId: string) {
   const [lote, totalAnimais, animaisComAlertaPesagem] = await Promise.all([
     prisma.lote.findUnique({
       where: { id: loteId },
-      include: { contrato: true },
+      include: { contrato: true, grupoContrato: true },
     }),
 
     // Total de animais ativos no lote hoje

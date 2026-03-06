@@ -9,7 +9,7 @@ export default async function AnimaisPage() {
       include: {
         pertinencias: {
           where: { dataFim: null },
-          include: { lote: { include: { contrato: { select: { nomeFazenda: true } } } } },
+          include: { lote: { include: { contrato: { select: { nomeFazenda: true } }, grupoContrato: { select: { nome: true } } } } },
         },
         pesagens: {
           orderBy: { dataPesagem: "desc" },
@@ -20,7 +20,7 @@ export default async function AnimaisPage() {
     prisma.lote.findMany({
       where: { ativo: true },
       orderBy: { nome: "asc" },
-      include: { contrato: { select: { nomeFazenda: true } } },
+      include: { contrato: { select: { nomeFazenda: true } }, grupoContrato: { select: { nome: true } } },
     }),
   ]);
 
@@ -29,7 +29,7 @@ export default async function AnimaisPage() {
     ...a,
     dataNascimento: a.dataNascimento?.toISOString() ?? null,
     pertinencias: a.pertinencias.map(p => ({
-      lote: { id: p.lote.id, nome: p.lote.nome, contrato: p.lote.contrato },
+      lote: { id: p.lote.id, nome: p.lote.nome, contrato: p.lote.contrato, grupoContrato: p.lote.grupoContrato },
       dataInicio: p.dataInicio.toISOString(),
       dataFim: p.dataFim?.toISOString() ?? null,
     })),

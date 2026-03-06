@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { animaisApi } from "@/lib/api";
 import { todayLocalStr } from "@/lib/utils";
 
-type Lote = { id: string; nome: string; contrato: { nomeFazenda: string } };
+type Lote = { id: string; nome: string; contrato?: { nomeFazenda: string } | null; grupoContrato?: { nome: string } | null };
 type Animal = { id: string; brinco: string; nome?: string | null };
 
 const today = todayLocalStr();
@@ -45,7 +45,7 @@ export function MovimentacaoSheet({
   const lotesAgrupados = useMemo(() => {
     const grupos: Record<string, Lote[]> = {};
     for (const lote of lotesDisponiveis) {
-      const fazenda = lote.contrato.nomeFazenda;
+      const fazenda = lote.contrato?.nomeFazenda ?? lote.grupoContrato?.nome ?? "Sem vínculo";
       if (!grupos[fazenda]) grupos[fazenda] = [];
       grupos[fazenda].push(lote);
     }
@@ -57,7 +57,7 @@ export function MovimentacaoSheet({
   const loteDestino = lotes.find((l) => l.id === loteDestinoId);
   const isCrossContrato =
     loteAtual && loteDestino &&
-    loteAtual.contrato.nomeFazenda !== loteDestino.contrato.nomeFazenda;
+    (loteAtual.contrato?.nomeFazenda ?? loteAtual.grupoContrato?.nome) !== (loteDestino.contrato?.nomeFazenda ?? loteDestino.grupoContrato?.nome);
 
   async function handleSubmit() {
     if (!loteDestinoId) {
@@ -144,8 +144,8 @@ export function MovimentacaoSheet({
               <div className="text-sm text-amber-800">
                 <p className="font-medium">Movimentação entre contratos</p>
                 <p className="text-xs mt-0.5">
-                  De <strong>{loteAtual!.contrato.nomeFazenda}</strong> para{" "}
-                  <strong>{loteDestino!.contrato.nomeFazenda}</strong>.
+                  De <strong>{loteAtual!.contrato?.nomeFazenda ?? loteAtual!.grupoContrato?.nome ?? ""}</strong> para{" "}
+                  <strong>{loteDestino!.contrato?.nomeFazenda ?? loteDestino!.grupoContrato?.nome ?? ""}</strong>.
                   Os custos futuros serão rateados pelo novo lote/contrato.
                 </p>
               </div>
