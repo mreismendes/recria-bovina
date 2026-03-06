@@ -172,9 +172,27 @@ export function ImportManager({
           const animalSheet = wb.Sheets[wb.SheetNames[0]]; // First sheet = Importação
           const animalRaw: Record<string, unknown>[] = XLSX.utils.sheet_to_json(animalSheet, { defval: "" });
           
+          let validatedAnimals: ValidatedAnimalRow[] = [];
           if (animalRaw.length > 0) {
-            setAnimalRows(validateAnimalRows(animalRaw));
+            validatedAnimals = validateAnimalRows(animalRaw);
+            setAnimalRows(validatedAnimals);
           }
+
+          // Collect brincos from valid animal rows so pesagem validation
+          // recognises animals being imported in the same file
+          const importingBrincos = new Set(
+            validatedAnimals
+              .filter((r) => r.status !== "error" && r.data.brinco)
+              .map((r) => r.data.brinco.toLowerCase())
+          );
+
+          // Collect entry pesagem keys (brinco|dataEntrada) that will be auto-created
+          // so we can detect conflicts with pesagem sheet rows
+          const entryPesagemKeys = new Set(
+            validatedAnimals
+              .filter((r) => r.status !== "error" && r.data.brinco && r.data.dataEntrada)
+              .map((r) => `${r.data.brinco.toLowerCase()}|${r.data.dataEntrada}`)
+          );
 
           // ── Parse Pesagens sheet ──
           const pesagemSheetName = wb.SheetNames.find((n) =>
@@ -184,7 +202,7 @@ export function ImportManager({
             const pesagemSheet = wb.Sheets[pesagemSheetName];
             const pesagemRaw: Record<string, unknown>[] = XLSX.utils.sheet_to_json(pesagemSheet, { defval: "" });
             if (pesagemRaw.length > 0) {
-              setPesagemRows(validatePesagemRows(pesagemRaw));
+              setPesagemRows(validatePesagemRows(pesagemRaw, importingBrincos, entryPesagemKeys));
             }
           }
 
@@ -205,6 +223,7 @@ export function ImportManager({
 
   function validateAnimalRows(raw: Record<string, unknown>[]): ValidatedAnimalRow[] {
     const brincosSeen = new Set<string>();
+    const rfidsSeen = new Set<string>();
     const validated: ValidatedAnimalRow[] = [];
 
     for (let i = 0; i < raw.length; i++) {
@@ -212,7 +231,7 @@ export function ImportManager({
       const msgs: string[] = [];
       let status: RowStatus = "ok";
 
-      const ctr = String(getCol(r, "Contrato", "contrato")).trim();
+      const ctr = String(getCol(r, "Contrato", "contrato", "Propriedade", "propriedade")).trim();
       const lote = String(getCol(r, "Lote", "lote")).trim();
       const brinco = String(getCol(r, "Brinco", "brinco")).trim();
       const rfid = String(getCol(r, "RFID", "rfid")).trim() || null;
@@ -245,8 +264,14 @@ export function ImportManager({
         brincosSeen.add(brinco.toLowerCase());
       }
 
-      if (rfid && rfidSet.has(rfid.toLowerCase())) {
-        msgs.push("RFID já existe"); status = "error";
+      if (rfid) {
+        const rfidLower = rfid.toLowerCase();
+        if (rfidSet.has(rfidLower)) {
+          msgs.push("RFID já existe no sistema"); status = "error";
+        } else if (rfidsSeen.has(rfidLower)) {
+          msgs.push("RFID duplicado na planilha"); status = "error";
+        }
+        rfidsSeen.add(rfidLower);
       }
 
       const newContrato = ctr ? !contratoSet.has(ctr.toLowerCase()) : false;
@@ -275,7 +300,7 @@ export function ImportManager({
 
   // ── Validate pesagem rows ──
 
-  function validatePesagemRows(raw: Record<string, unknown>[]): ValidatedPesagemRow[] {
+  function validatePesagemRows(raw: Record<string, unknown>[], importingBrincos: Set<string> = new Set(), entryPesagemKeys: Set<string> = new Set()): ValidatedPesagemRow[] {
     const seenKeys = new Set<string>();
     const validated: ValidatedPesagemRow[] = [];
 
@@ -295,8 +320,8 @@ export function ImportManager({
       if (!dataPesagem) { msgs.push("Data inválida"); status = "error"; }
       if (pesoKg == null || pesoKg <= 0) { msgs.push("Peso inválido"); status = "error"; }
 
-      // Check animal exists
-      if (brinco && !brincoExists(brinco)) {
+      // Check animal exists (in DB or being imported in this same file)
+      if (brinco && !brincoExists(brinco) && !importingBrincos.has(brinco.toLowerCase())) {
         msgs.push("Animal não encontrado no sistema"); status = "error";
       }
 
@@ -305,6 +330,8 @@ export function ImportManager({
         const key = `${brinco.toLowerCase()}|${dataPesagem}`;
         if (pesagemKeySet.has(key)) {
           msgs.push("Pesagem já existe para este animal nesta data"); status = "error";
+        } else if (entryPesagemKeys.has(key)) {
+          msgs.push("Conflita com pesagem de entrada que será criada automaticamente"); status = "error";
         } else if (seenKeys.has(key)) {
           msgs.push("Duplicado na planilha (mesmo brinco+data)"); status = "error";
         }
