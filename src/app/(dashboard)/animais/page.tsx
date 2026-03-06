@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 import { AnimaisManager } from "./_components/animais-manager";
 
 export default async function AnimaisPage() {
+  const session = await getSession();
+  const userRole = (session?.user?.role as string) ?? "OPERADOR";
   const [animaisRaw, lotes] = await Promise.all([
     prisma.animal.findMany({
       where: { status: "ATIVO" },
@@ -41,5 +44,5 @@ export default async function AnimaisPage() {
     })),
   }));
 
-  return <AnimaisManager initialAnimais={animais} lotes={lotes} />;
+  return <AnimaisManager initialAnimais={animais} lotes={lotes} userRole={userRole} />;
 }
