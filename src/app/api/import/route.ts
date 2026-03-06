@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
         include: { contrato: { select: { idContrato: true, nomeFazenda: true } } },
       });
       for (const l of lotesExistentes) {
+        if (!l.contrato) continue;
         const keyById = `${l.contrato.idContrato.trim().toLowerCase()}|${l.nome.trim().toLowerCase()}`;
         const keyByName = `${l.contrato.nomeFazenda.trim().toLowerCase()}|${l.nome.trim().toLowerCase()}`;
         loteCache.set(keyById, l.id);

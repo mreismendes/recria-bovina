@@ -18,10 +18,12 @@ import { grupoContratosApi, contratosApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 type ContratoRef = { id: string; idContrato: string; nomeFazenda: string; grupoContratoId?: string | null };
+type LoteRef = { id: string; nome: string };
 type GrupoContrato = {
   id: string; nome: string; descricao?: string | null; ativo: boolean;
-  _count?: { contratos: number };
+  _count?: { contratos: number; lotes: number };
   contratos: { id: string; idContrato: string; nomeFazenda: string }[];
+  lotes: LoteRef[];
 };
 
 export function GrupoContratosManager({ initialData, contratos }: { initialData: GrupoContrato[]; contratos: ContratoRef[] }) {
@@ -64,7 +66,7 @@ export function GrupoContratosManager({ initialData, contratos }: { initialData:
         setItems(items.map(i => i.id === editing.id ? { ...i, ...updated, contratos: i.contratos, _count: i._count } : i));
       } else {
         const created = await grupoContratosApi.create(data);
-        setItems([...items, { ...created, _count: { contratos: 0 }, contratos: [] }]);
+        setItems([...items, { ...created, _count: { contratos: 0, lotes: 0 }, contratos: [], lotes: [] }]);
       }
       setSheetOpen(false);
       router.refresh();
@@ -108,7 +110,7 @@ export function GrupoContratosManager({ initialData, contratos }: { initialData:
         return {
           ...g,
           contratos: [...g.contratos, { id: contrato.id, idContrato: contrato.idContrato, nomeFazenda: contrato.nomeFazenda }],
-          _count: { contratos: (g._count?.contratos ?? 0) + 1 },
+          _count: { contratos: (g._count?.contratos ?? 0) + 1, lotes: g._count?.lotes ?? 0 },
         };
       }));
       setAllContratos(allContratos.map(c => c.id === selectedContratoId ? { ...c, grupoContratoId: linkingGrupo.id } : c));
@@ -128,7 +130,7 @@ export function GrupoContratosManager({ initialData, contratos }: { initialData:
         return {
           ...g,
           contratos: g.contratos.filter(c => c.id !== contratoId),
-          _count: { contratos: Math.max((g._count?.contratos ?? 1) - 1, 0) },
+          _count: { contratos: Math.max((g._count?.contratos ?? 1) - 1, 0), lotes: g._count?.lotes ?? 0 },
         };
       }));
       setAllContratos(allContratos.map(c => c.id === contratoId ? { ...c, grupoContratoId: null } : c));
@@ -247,6 +249,20 @@ export function GrupoContratosManager({ initialData, contratos }: { initialData:
                   </Button>
                 )}
               </div>
+
+              {/* Lotes vinculados diretamente */}
+              {grupo.lotes.length > 0 && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Lotes vinculados diretamente ({grupo.lotes.length})
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {grupo.lotes.map(l => (
+                      <Badge key={l.id} variant="outline" className="font-normal">{l.nome}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}

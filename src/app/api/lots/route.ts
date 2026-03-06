@@ -19,11 +19,12 @@ export async function GET(req: NextRequest) {
     const lotes = await prisma.lote.findMany({
       where: {
         ...(contratoId && { contratoId }),
-        ...(grupoContratoId && { contrato: { grupoContratoId } }),
+        ...(grupoContratoId && { grupoContratoId }),
         ...(ativo !== null && { ativo: ativo !== "false" }),
       },
       include: {
-        contrato: { include: { grupoContrato: { select: { id: true, nome: true } } } },
+        contrato: true,
+        grupoContrato: { select: { id: true, nome: true } },
         pertinencias: { where: { dataFim: null }, select: { id: true } },
       },
       orderBy: { nome: "asc" },

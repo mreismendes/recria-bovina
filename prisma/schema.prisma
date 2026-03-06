@@ -52,6 +52,7 @@ model GrupoContrato {
   updatedAt DateTime @updatedAt
 
   contratos Contrato[]
+  lotes     Lote[]
 
   @@map("grupos_contrato")
 }
@@ -96,20 +97,24 @@ enum FormatoContrato {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Lote {
-  id         String   @id @default(cuid())
-  nome       String
-  descricao  String?
-  contratoId String
-  contrato   Contrato @relation(fields: [contratoId], references: [id])
-  ativo      Boolean  @default(true)
+  id              String   @id @default(cuid())
+  nome            String
+  descricao       String?
+  contratoId      String?
+  grupoContratoId String?
+  ativo           Boolean  @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  contrato        Contrato?       @relation(fields: [contratoId], references: [id])
+  grupoContrato   GrupoContrato?  @relation(fields: [grupoContratoId], references: [id])
 
   pertinencias            PertinenciaLote[]
   apontamentosSuplemento  ApontamentoSuplemento[]
   apontamentosMedicamento ApontamentoMedicamento[]
 
+  @@index([grupoContratoId])
   @@map("lotes")
 }
 

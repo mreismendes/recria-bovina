@@ -25,9 +25,9 @@ export default async function ImportarPage() {
   const contratoIdentifiers = contratos.flatMap((c) => [c.idContrato, c.nomeFazenda]);
 
   // Lotes must be findable by both contract ID and farm name
-  const loteEntries = lotes.flatMap((l) => [
-    { nome: l.nome, contrato: l.contrato.idContrato },
-    { nome: l.nome, contrato: l.contrato.nomeFazenda },
+  const loteEntries = lotes.filter((l) => l.contrato).flatMap((l) => [
+    { nome: l.nome, contrato: l.contrato!.idContrato },
+    { nome: l.nome, contrato: l.contrato!.nomeFazenda },
   ]);
 
   return (
