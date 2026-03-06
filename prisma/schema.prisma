@@ -41,17 +41,11 @@ enum UserRole {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Contrato {
-  id            String          @id @default(cuid())
-  idContrato    String          @unique              // código definido pelo usuário, ex: "RCA-2025-001"
-  nomeFazenda   String
-  proprietario  String?
-  comunidade    String?
-  cidade        String?
-  estado        String?
-  formato       FormatoContrato?
-  areaHectares  Float?
-  observacoes   String?
-  ativo         Boolean         @default(true)
+  id          String  @id @default(cuid())
+  idContrato  String  @unique              // código definido pelo usuário, ex: "RCA-2025-001"
+  nomeFazenda String
+  observacoes String?
+  ativo       Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -59,11 +53,6 @@ model Contrato {
   lotes Lote[]
 
   @@map("contratos")
-}
-
-enum FormatoContrato {
-  PARCERIA
-  ARRENDAMENTO
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
