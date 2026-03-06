@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json();
-    const { idContrato, nomeFazenda, observacoes } = body;
+    const { idContrato, nomeFazenda, observacoes, proprietario, comunidade, cidade, estado, formato, areaHectares } = body;
 
     const existing = await prisma.contrato.findUnique({ where: { id: params.id } });
     if (!existing) return NextResponse.json({ success: false, error: "Contrato não encontrado" }, { status: 404 });
@@ -20,6 +20,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         ...(idContrato !== undefined && { idContrato }),
         ...(nomeFazenda !== undefined && { nomeFazenda }),
         ...(observacoes !== undefined && { observacoes }),
+        ...(proprietario !== undefined && { proprietario: proprietario || null }),
+        ...(comunidade !== undefined && { comunidade: comunidade || null }),
+        ...(cidade !== undefined && { cidade: cidade || null }),
+        ...(estado !== undefined && { estado: estado || null }),
+        ...(formato !== undefined && { formato: formato || null }),
+        ...(areaHectares !== undefined && { areaHectares: areaHectares != null ? parseFloat(areaHectares) : null }),
       },
     });
     return NextResponse.json({ success: true, data: contrato });
