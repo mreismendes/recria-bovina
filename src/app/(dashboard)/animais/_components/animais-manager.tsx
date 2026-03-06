@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Search, Beef, ArrowRightLeft, LogOut, CheckSquare, Upload } from "lucide-react";
+import { Plus, Pencil, Search, Beef, ArrowRightLeft, LogOut, CheckSquare, Upload, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { animalSchema, type AnimalFormData } from "@/lib/validations";
 import { animaisApi } from "@/lib/api";
 import { formatPeso, formatCurrency, SEXO_LABEL, TIPO_ENTRADA_LABEL, todayLocalStr } from "@/lib/utils";
@@ -45,6 +46,8 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [movimentacaoOpen, setMovimentacaoOpen] = useState(false);
   const [saidaOpen, setSaidaOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Animal | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const form = useForm<AnimalFormData>({
     resolver: zodResolver(animalSchema),
@@ -143,6 +146,24 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
   }
   const selectedAnimais = items.filter((a) => selectedIds.has(a.id));
   const selectedLoteId = selectedAnimais[0]?.pertinencias.find((p) => !p.dataFim)?.lote.id ?? null;
+
+  async function onDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await animaisApi.remove(deleteTarget.id);
+      setItems(items.filter(i => i.id !== deleteTarget.id));
+      setSelectedIds(prev => { const next = new Set(prev); next.delete(deleteTarget.id); return next; });
+      setDeleteTarget(null);
+      router.refresh();
+    } catch (e: any) {
+      setError(e.message);
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -299,9 +320,14 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
                   </TableCell>
                   <TableCell className="text-right font-mono text-sm">{formatCurrency(item.custoAquisicao)}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
-                      <Pencil className="h-4 w-4 text-gray-500" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
+                        <Pencil className="h-4 w-4 text-gray-500" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(item)}>
+                        <Trash2 className="h-4 w-4 text-red-400 hover:text-red-600" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -530,6 +556,28 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
         animais={selectedAnimais.map((a) => ({ id: a.id, brinco: a.brinco, nome: a.nome, pesoEntradaKg: a.pesoEntradaKg }))}
         onSuccess={() => { setSelectedIds(new Set()); router.refresh(); }}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir animal</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o animal <strong className="text-gray-900">{deleteTarget?.brinco}</strong>
+              {deleteTarget?.nome ? ` (${deleteTarget.nome})` : ""}? Esta ação removerá permanentemente o animal,
+              suas pesagens, pertinências de lote e movimentações. Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={onDelete} disabled={deleting}>
+              {deleting ? "Excluindo…" : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
