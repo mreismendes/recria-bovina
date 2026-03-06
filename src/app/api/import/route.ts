@@ -57,20 +57,23 @@ export async function POST(req: NextRequest) {
       const pulados: { brinco: string; motivo: string }[] = [];
       const lotesCriados = new Set<string>();
 
-      // Pre-load existing contratos
+      // Pre-load existing contratos — index by both idContrato and nomeFazenda
       const contratosExistentes = await tx.contrato.findMany({ where: { ativo: true } });
       for (const c of contratosExistentes) {
         contratoCache.set(c.idContrato.trim().toLowerCase(), c.id);
+        contratoCache.set(c.nomeFazenda.trim().toLowerCase(), c.id);
       }
 
-      // Pre-load existing lotes
+      // Pre-load existing lotes — index by both idContrato and nomeFazenda
       const lotesExistentes = await tx.lote.findMany({
         where: { ativo: true },
-        include: { contrato: { select: { idContrato: true } } },
+        include: { contrato: { select: { idContrato: true, nomeFazenda: true } } },
       });
       for (const l of lotesExistentes) {
-        const key = `${l.contrato.idContrato.trim().toLowerCase()}|${l.nome.trim().toLowerCase()}`;
-        loteCache.set(key, l.id);
+        const keyById = `${l.contrato.idContrato.trim().toLowerCase()}|${l.nome.trim().toLowerCase()}`;
+        const keyByName = `${l.contrato.nomeFazenda.trim().toLowerCase()}|${l.nome.trim().toLowerCase()}`;
+        loteCache.set(keyById, l.id);
+        loteCache.set(keyByName, l.id);
       }
 
       // Pre-load existing brincos

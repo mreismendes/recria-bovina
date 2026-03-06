@@ -21,10 +21,19 @@ export default async function ImportarPage() {
     `,
   ]);
 
+  // Pass both idContrato and nomeFazenda so import resolves either
+  const contratoIdentifiers = contratos.flatMap((c) => [c.idContrato, c.nomeFazenda]);
+
+  // Lotes must be findable by both contract ID and farm name
+  const loteEntries = lotes.flatMap((l) => [
+    { nome: l.nome, contrato: l.contrato.idContrato },
+    { nome: l.nome, contrato: l.contrato.nomeFazenda },
+  ]);
+
   return (
     <ImportManager
-      existingContratos={contratos.map((c) => c.idContrato)}
-      existingLotes={lotes.map((l) => ({ nome: l.nome, contrato: l.contrato.idContrato }))}
+      existingContratos={contratoIdentifiers}
+      existingLotes={loteEntries}
       existingBrincos={animais.map((a) => a.brinco)}
       existingRfids={animais.filter((a) => a.rfid).map((a) => a.rfid!)}
       existingPesagemKeys={pesagemKeys.map((r) => r.key)}

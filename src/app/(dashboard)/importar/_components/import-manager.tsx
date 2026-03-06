@@ -231,7 +231,7 @@ export function ImportManager({
       const msgs: string[] = [];
       let status: RowStatus = "ok";
 
-      const ctr = String(getCol(r, "Contrato", "contrato")).trim();
+      const ctr = String(getCol(r, "Contrato", "contrato", "Propriedade", "propriedade")).trim();
       const lote = String(getCol(r, "Lote", "lote")).trim();
       const brinco = String(getCol(r, "Brinco", "brinco")).trim();
       const rfid = String(getCol(r, "RFID", "rfid")).trim() || null;
