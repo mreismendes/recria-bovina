@@ -22,24 +22,19 @@ const FORMATO_OPTIONS = [
   { value: "ARRENDAMENTO", label: "Arrendamento" },
 ] as const;
 
-const NONE_VALUE = "__none__";
-
 const schema = z.object({
-  idContrato:      z.string().min(1, "ID do Contrato é obrigatório").max(50),
-  nomeFazenda:     z.string().min(1, "Nome da Fazenda é obrigatório").max(200),
-  proprietario:    z.string().max(200).optional().nullable(),
-  comunidade:      z.string().max(200).optional().nullable(),
-  cidade:          z.string().max(200).optional().nullable(),
-  estado:          z.string().max(2).optional().nullable(),
-  formato:         z.enum(["PARCERIA", "ARRENDAMENTO"]).optional().nullable(),
-  areaHectares:    z.coerce.number().positive("Área deve ser positiva").optional().nullable(),
-  observacoes:     z.string().max(500).optional().nullable(),
-  grupoContratoId: z.string().optional().nullable(),
+  idContrato:   z.string().min(1, "ID do Contrato é obrigatório").max(50),
+  nomeFazenda:  z.string().min(1, "Nome da Fazenda é obrigatório").max(200),
+  proprietario: z.string().max(200).optional().nullable(),
+  comunidade:   z.string().max(200).optional().nullable(),
+  cidade:       z.string().max(200).optional().nullable(),
+  estado:       z.string().max(2).optional().nullable(),
+  formato:      z.enum(["PARCERIA", "ARRENDAMENTO"]).optional().nullable(),
+  areaHectares: z.coerce.number().positive("Área deve ser positiva").optional().nullable(),
+  observacoes:  z.string().max(500).optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
-
-type GrupoRef = { id: string; nome: string };
 
 type Contrato = {
   id: string; idContrato: string; nomeFazenda: string;
@@ -47,12 +42,10 @@ type Contrato = {
   cidade?: string | null; estado?: string | null;
   formato?: string | null; areaHectares?: number | null;
   observacoes?: string | null; ativo: boolean;
-  grupoContratoId?: string | null;
-  grupoContrato?: GrupoRef | null;
   _count?: { lotes: number };
 };
 
-export function ContratosManager({ initialData, grupos }: { initialData: Contrato[]; grupos: GrupoRef[] }) {
+export function ContratosManager({ initialData }: { initialData: Contrato[] }) {
   const router = useRouter();
   const [items, setItems] = useState(initialData);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -62,12 +55,12 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { idContrato: "", nomeFazenda: "", proprietario: "", comunidade: "", cidade: "", estado: "", formato: null, areaHectares: null, observacoes: "", grupoContratoId: null },
+    defaultValues: { idContrato: "", nomeFazenda: "", proprietario: "", comunidade: "", cidade: "", estado: "", formato: null, areaHectares: null, observacoes: "" },
   });
 
   function openCreate() {
     setEditing(null);
-    form.reset({ idContrato: "", nomeFazenda: "", proprietario: "", comunidade: "", cidade: "", estado: "", formato: null, areaHectares: null, observacoes: "", grupoContratoId: null });
+    form.reset({ idContrato: "", nomeFazenda: "", proprietario: "", comunidade: "", cidade: "", estado: "", formato: null, areaHectares: null, observacoes: "" });
     setError(null);
     setSheetOpen(true);
   }
@@ -84,7 +77,6 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
       formato: (item.formato as "PARCERIA" | "ARRENDAMENTO") ?? null,
       areaHectares: item.areaHectares ?? null,
       observacoes: item.observacoes ?? "",
-      grupoContratoId: item.grupoContratoId ?? null,
     });
     setError(null);
     setSheetOpen(true);
@@ -93,18 +85,12 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
   async function onSubmit(data: FormData) {
     setError(null);
     try {
-      const payload = {
-        ...data,
-        grupoContratoId: data.grupoContratoId || null,
-      };
       if (editing) {
-        const updated = await contratosApi.update(editing.id, payload);
-        const grupo = grupos.find(g => g.id === payload.grupoContratoId) ?? null;
-        setItems(items.map(i => i.id === editing.id ? { ...i, ...updated, grupoContrato: grupo, grupoContratoId: payload.grupoContratoId } : i));
+        const updated = await contratosApi.update(editing.id, data);
+        setItems(items.map(i => i.id === editing.id ? { ...i, ...updated } : i));
       } else {
-        const created = await contratosApi.create(payload);
-        const grupo = grupos.find(g => g.id === payload.grupoContratoId) ?? null;
-        setItems([...items, { ...created, _count: { lotes: 0 }, grupoContrato: grupo, grupoContratoId: payload.grupoContratoId }]);
+        const created = await contratosApi.create(data);
+        setItems([...items, { ...created, _count: { lotes: 0 } }]);
       }
       setSheetOpen(false);
       router.refresh();
@@ -152,7 +138,6 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
               <TableHead>Proprietário</TableHead>
               <TableHead>Localidade</TableHead>
               <TableHead>Formato</TableHead>
-              <TableHead>Grupo</TableHead>
               <TableHead className="text-center">Lotes</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="w-24"></TableHead>
@@ -161,7 +146,7 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
           <TableBody>
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-12 text-gray-400">
+                <TableCell colSpan={8} className="text-center py-12 text-gray-400">
                   <FileText className="h-10 w-10 mx-auto mb-2 opacity-30" />
                   Nenhum contrato cadastrado
                 </TableCell>
@@ -174,13 +159,6 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
                 <TableCell className="text-sm text-gray-600">{item.proprietario || "—"}</TableCell>
                 <TableCell className="text-sm text-gray-600">{item.cidade && item.estado ? `${item.cidade}/${item.estado}` : item.cidade || item.estado || "—"}</TableCell>
                 <TableCell className="text-sm text-gray-600">{item.formato ? FORMATO_OPTIONS.find(o => o.value === item.formato)?.label ?? item.formato : "—"}</TableCell>
-                <TableCell className="text-sm">
-                  {item.grupoContrato ? (
-                    <Badge variant="outline" className="font-normal">{item.grupoContrato.nome}</Badge>
-                  ) : (
-                    <span className="text-gray-400">—</span>
-                  )}
-                </TableCell>
                 <TableCell className="text-center font-semibold">{item._count?.lotes ?? 0}</TableCell>
                 <TableCell className="text-center">
                   <Badge variant={item.ativo ? "success" : "secondary"}>{item.ativo ? "Ativo" : "Inativo"}</Badge>
@@ -290,28 +268,6 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
                   </FormItem>
                 )} />
               </div>
-
-              {grupos.length > 0 && (
-                <FormField control={form.control} name="grupoContratoId" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Grupo de Contratos</FormLabel>
-                    <Select onValueChange={v => field.onChange(v === NONE_VALUE ? null : v)} value={field.value ?? NONE_VALUE}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Nenhum (contrato independente)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={NONE_VALUE}>Nenhum (contrato independente)</SelectItem>
-                        {grupos.map(g => (
-                          <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              )}
 
               <FormField control={form.control} name="observacoes" render={({ field }) => (
                 <FormItem>

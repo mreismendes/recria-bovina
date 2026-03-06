@@ -16,16 +16,6 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return (json as { success: true; data: T }).data;
 }
 
-// ── Grupos de Contratos ───────────────────────────────────────────────────
-
-export const grupoContratosApi = {
-  list: () => apiFetch<any[]>("/api/grupo-contratos"),
-  get: (id: string) => apiFetch<any>(`/api/grupo-contratos/${id}`),
-  create: (data: unknown) => apiFetch<any>("/api/grupo-contratos", { method: "POST", body: JSON.stringify(data) }),
-  update: (id: string, data: unknown) => apiFetch<any>(`/api/grupo-contratos/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  remove: (id: string) => apiFetch<any>(`/api/grupo-contratos/${id}`, { method: "DELETE" }),
-};
-
 // ── Contratos ──────────────────────────────────────────────────────────────
 
 export const contratosApi = {

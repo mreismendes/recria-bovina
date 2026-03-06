@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Beef, Layers, Scale, Wheat, Pill, Package, FileText, FolderOpen, Upload, Download, ChevronRight, Users } from "lucide-react";
+import { LayoutDashboard, Beef, Layers, Scale, Wheat, Pill, Package, FileText, Upload, Download, ChevronRight, Users } from "lucide-react";
 
 const navItems = [
   { label: "Painel",         href: "/dashboard",     icon: LayoutDashboard },
@@ -16,11 +16,10 @@ const navItems = [
 ];
 
 const configItems = [
-  { label: "Produtos",       href: "/produtos",           icon: Package },
-  { label: "Contratos",      href: "/contratos",          icon: FileText },
-  { label: "Grupos",         href: "/grupo-contratos",    icon: FolderOpen },
-  { label: "Importar",       href: "/importar",           icon: Upload },
-  { label: "Exportar",       href: "/exportar",           icon: Download },
+  { label: "Produtos",       href: "/produtos",       icon: Package },
+  { label: "Contratos",       href: "/contratos",      icon: FileText },
+  { label: "Importar",       href: "/importar",       icon: Upload },
+  { label: "Exportar",       href: "/exportar",       icon: Download },
 ];
 
 export function Sidebar() {
