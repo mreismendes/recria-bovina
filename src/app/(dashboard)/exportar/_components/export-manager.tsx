@@ -9,7 +9,6 @@ import { Beef, Scale, Layers, Download, Loader2 } from "lucide-react";
 
 type Lote = { id: string; nome: string };
 type Contrato = { id: string; idContrato: string; nomeFazenda: string };
-type GrupoContrato = { id: string; nome: string };
 
 // ── XLSX download ───────────────────────────────────────────────────────────
 
@@ -41,11 +40,9 @@ function downloadXlsx(data: Record<string, unknown>[], headers: Record<string, s
 export function ExportManager({
   lotes,
   contratos,
-  grupos,
 }: {
   lotes: Lote[];
   contratos: Contrato[];
-  grupos: GrupoContrato[];
 }) {
   return (
     <div className="space-y-6">
@@ -56,7 +53,7 @@ export function ExportManager({
       <div className="grid grid-cols-1 gap-6">
         <ExportAnimais lotes={lotes} />
         <ExportPesagens lotes={lotes} />
-        <ExportLotes contratos={contratos} grupos={grupos} />
+        <ExportLotes contratos={contratos} />
       </div>
     </div>
   );
@@ -235,9 +232,8 @@ function ExportPesagens({ lotes }: { lotes: Lote[] }) {
 
 // ── Exportar Lotes ──────────────────────────────────────────────────────────
 
-function ExportLotes({ contratos, grupos }: { contratos: Contrato[]; grupos: GrupoContrato[] }) {
+function ExportLotes({ contratos }: { contratos: Contrato[] }) {
   const [contratoIds, setContratoIds] = useState<string[]>([]);
-  const [grupoIds, setGrupoIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>(["ATIVO"]);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -248,7 +244,6 @@ function ExportLotes({ contratos, grupos }: { contratos: Contrato[]; grupos: Gru
     try {
       const qs = new URLSearchParams();
       if (contratoIds.length > 0) qs.set("contratoIds", contratoIds.join(","));
-      if (grupoIds.length > 0) qs.set("grupoContratoIds", grupoIds.join(","));
       if (statuses.length > 0) qs.set("status", statuses.join(","));
 
       const res = await fetch(`/api/export/lotes?${qs}`);
@@ -258,8 +253,8 @@ function ExportLotes({ contratos, grupos }: { contratos: Contrato[]; grupos: Gru
       if (json.data.length === 0) { setMsg("Nenhum lote encontrado."); return; }
 
       downloadXlsx(json.data, {
-        nome: "Lote", fazenda: "Fazenda (Contrato)", grupo: "Grupo",
-        cabecasAtivas: "Cabeças Ativas", ativo: "Ativo", descricao: "Descrição", criadoEm: "Criado em",
+        nome: "Lote", fazenda: "Fazenda (Contrato)", cabecasAtivas: "Cabeças Ativas",
+        ativo: "Ativo", descricao: "Descrição", criadoEm: "Criado em",
       }, `lotes_${new Date().toISOString().split("T")[0]}.xlsx`);
 
       setMsg(`${json.data.length} lote(s) exportado(s).`);
@@ -273,11 +268,11 @@ function ExportLotes({ contratos, grupos }: { contratos: Contrato[]; grupos: Gru
         <div className="bg-amber-50 rounded-lg p-2.5"><Layers className="h-5 w-5 text-amber-700" /></div>
         <div>
           <h2 className="font-semibold text-gray-900">Cadastro de Lotes</h2>
-          <p className="text-xs text-gray-500">Lote, fazenda, grupo, cabeças ativas e status</p>
+          <p className="text-xs text-gray-500">Lote, fazenda, cabeças ativas e status</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <div>
           <label className="text-xs font-medium text-gray-500">Contratos</label>
           <MultiSelect
@@ -288,18 +283,6 @@ function ExportLotes({ contratos, grupos }: { contratos: Contrato[]; grupos: Gru
             allLabel="Todas"
           />
         </div>
-        {grupos.length > 0 && (
-          <div>
-            <label className="text-xs font-medium text-gray-500">Grupos</label>
-            <MultiSelect
-              className="mt-1"
-              options={grupos.map((g) => ({ value: g.id, label: g.nome }))}
-              selected={grupoIds}
-              onChange={(v) => { setGrupoIds(v); setMsg(null); }}
-              allLabel="Todos"
-            />
-          </div>
-        )}
         <div>
           <label className="text-xs font-medium text-gray-500">Status</label>
           <MultiSelect

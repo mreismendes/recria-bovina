@@ -162,17 +162,6 @@ export const produtoSchema = z.object({
 export type ProdutoFormData = z.infer<typeof produtoSchema>;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GRUPO DE CONTRATOS
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const grupoContratoSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório").max(200),
-  descricao: z.string().max(500).optional().nullable(),
-});
-
-export type GrupoContratoFormData = z.infer<typeof grupoContratoSchema>;
-
-// ─────────────────────────────────────────────────────────────────────────────
 // LOTE
 // ─────────────────────────────────────────────────────────────────────────────
 

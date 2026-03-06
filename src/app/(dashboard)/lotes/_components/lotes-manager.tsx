@@ -17,8 +17,7 @@ import { loteSchema, type LoteFormData } from "@/lib/validations";
 import { lotesApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
-type GrupoRef = { id: string; nome: string };
-type Contrato = { id: string; idContrato: string; nomeFazenda: string; grupoContrato?: GrupoRef | null };
+type Contrato = { id: string; idContrato: string; nomeFazenda: string };
 type Lote = { id: string; nome: string; descricao?: string | null; contratoId: string; contrato: Contrato; pertinencias: { id: string }[]; ativo: boolean };
 
 export function LotesManager({ initialLotes, contratos }: { initialLotes: Lote[]; contratos: Contrato[] }) {
@@ -66,16 +65,15 @@ export function LotesManager({ initialLotes, contratos }: { initialLotes: Lote[]
       <div className="bg-white rounded-lg border shadow-sm">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Nome do Lote</TableHead><TableHead>Contrato</TableHead><TableHead>Fazenda</TableHead><TableHead>Grupo</TableHead><TableHead>Descrição</TableHead><TableHead className="text-center">Cabeças ativas</TableHead><TableHead className="w-24"></TableHead>
+            <TableHead>Nome do Lote</TableHead><TableHead>Contrato</TableHead><TableHead>Fazenda</TableHead><TableHead>Descrição</TableHead><TableHead className="text-center">Cabeças ativas</TableHead><TableHead className="w-24"></TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {items.length === 0 && (<TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-400"><Layers className="h-10 w-10 mx-auto mb-2 opacity-30" />Nenhum lote cadastrado</TableCell></TableRow>)}
+            {items.length === 0 && (<TableRow><TableCell colSpan={6} className="text-center py-12 text-gray-400"><Layers className="h-10 w-10 mx-auto mb-2 opacity-30" />Nenhum lote cadastrado</TableCell></TableRow>)}
             {items.map(item => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.nome}</TableCell>
                 <TableCell className="font-mono text-sm text-gray-600">{item.contrato.idContrato}</TableCell>
                 <TableCell className="text-gray-500">{item.contrato.nomeFazenda}</TableCell>
-                <TableCell className="text-sm">{item.contrato.grupoContrato ? <Badge variant="outline" className="font-normal">{item.contrato.grupoContrato.nome}</Badge> : <span className="text-gray-400">—</span>}</TableCell>
                 <TableCell className="text-gray-400 text-sm max-w-xs truncate">{item.descricao || "—"}</TableCell>
                 <TableCell className="text-center"><Badge variant={item.pertinencias.length > 0 ? "success" : "secondary"} className="font-semibold">{item.pertinencias.length} cab.</Badge></TableCell>
                 <TableCell><div className="flex items-center gap-1 justify-end">

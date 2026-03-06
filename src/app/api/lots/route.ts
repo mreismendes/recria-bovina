@@ -13,17 +13,15 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const contratoId = searchParams.get("contratoId");
-    const grupoContratoId = searchParams.get("grupoContratoId");
     const ativo = searchParams.get("ativo");
 
     const lotes = await prisma.lote.findMany({
       where: {
         ...(contratoId && { contratoId }),
-        ...(grupoContratoId && { contrato: { grupoContratoId } }),
         ...(ativo !== null && { ativo: ativo !== "false" }),
       },
       include: {
-        contrato: { include: { grupoContrato: { select: { id: true, nome: true } } } },
+        contrato: true,
         pertinencias: { where: { dataFim: null }, select: { id: true } },
       },
       orderBy: { nome: "asc" },
