@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
       }
 
       return { criados, pulados, lotesCriados: Array.from(lotesCriados) };
-    });
+    }, { maxWait: 30000, timeout: 60000 });
 
     return NextResponse.json({ success: true, data: resultado }, { status: 201 });
   } catch (e) {

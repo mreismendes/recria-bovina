@@ -1,9 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { format } from "date-fns";
 import { ImportManager } from "./_components/import-manager";
 
 export default async function ImportarPage() {
-  const [contratos, lotes, animais, pesagens] = await Promise.all([
+  const [contratos, lotes, animais, pesagemKeys] = await Promise.all([
     prisma.contrato.findMany({
       where: { ativo: true },
       orderBy: { idContrato: "asc" },
@@ -14,9 +13,12 @@ export default async function ImportarPage() {
       include: { contrato: { select: { idContrato: true, nomeFazenda: true } } },
     }),
     prisma.animal.findMany({ select: { brinco: true, rfid: true } }),
-    prisma.pesagem.findMany({
-      select: { dataPesagem: true, animal: { select: { brinco: true } } },
-    }),
+    // Build pesagem duplicate-check keys efficiently at DB level
+    prisma.$queryRaw<{ key: string }[]>`
+      SELECT LOWER(a.brinco) || '|' || TO_CHAR(p."dataPesagem", 'YYYY-MM-DD') AS key
+      FROM pesagens p
+      JOIN animais a ON a.id = p."animalId"
+    `,
   ]);
 
   return (
@@ -25,7 +27,7 @@ export default async function ImportarPage() {
       existingLotes={lotes.map((l) => ({ nome: l.nome, contrato: l.contrato.idContrato }))}
       existingBrincos={animais.map((a) => a.brinco)}
       existingRfids={animais.filter((a) => a.rfid).map((a) => a.rfid!)}
-      existingPesagemKeys={pesagens.map((p) => `${p.animal.brinco}|${format(p.dataPesagem, "yyyy-MM-dd")}`)}
+      existingPesagemKeys={pesagemKeys.map((r) => r.key)}
     />
   );
 }

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       // Pre-load brinco → id map
       const brincos = Array.from(new Set(pesagens.map((p) => p.brinco)));
       const animais = await tx.animal.findMany({
-        where: { brinco: { in: brincos } },
+        where: { brinco: { in: brincos }, status: "ATIVO" },
         select: { id: true, brinco: true },
       });
       const brincoToId = new Map(animais.map((a) => [a.brinco.toLowerCase(), a.id]));
@@ -60,9 +60,9 @@ export async function POST(req: NextRequest) {
         });
         if (existente) { puladas++; continue; }
 
-        // Calculate GMD
+        // Calculate GMD — find the latest pesagem BEFORE this date
         const ultima = await tx.pesagem.findFirst({
-          where: { animalId },
+          where: { animalId, dataPesagem: { lt: dataPesagemDate } },
           orderBy: { dataPesagem: "desc" },
         });
 
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       }
 
       return { registradas, puladas };
-    });
+    }, { maxWait: 30000, timeout: 60000 });
 
     return NextResponse.json({ success: true, data: resultado }, { status: 201 });
   } catch (e) {
