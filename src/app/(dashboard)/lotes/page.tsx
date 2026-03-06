@@ -7,7 +7,7 @@ export default async function LotesPage() {
       where: { ativo: true },
       orderBy: { nome: "asc" },
       include: {
-        contrato: true,
+        contrato: { include: { grupoContrato: { select: { id: true, nome: true } } } },
         pertinencias: { where: { dataFim: null }, select: { id: true } },
       },
     }),

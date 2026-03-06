@@ -5,7 +5,10 @@ export async function GET() {
   try {
     const contratos = await prisma.contrato.findMany({
       orderBy: { idContrato: "asc" },
-      include: { _count: { select: { lotes: true } } },
+      include: {
+        _count: { select: { lotes: true } },
+        grupoContrato: { select: { id: true, nome: true } },
+      },
     });
     return NextResponse.json({ success: true, data: contratos });
   } catch {
@@ -16,7 +19,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { idContrato, nomeFazenda, proprietario, comunidade, cidade, estado, formato, areaHectares, observacoes } = body;
+    const { idContrato, nomeFazenda, proprietario, comunidade, cidade, estado, formato, areaHectares, observacoes, grupoContratoId } = body;
 
     if (!idContrato || !nomeFazenda) {
       return NextResponse.json({ success: false, error: "ID do Contrato e Nome da Fazenda são obrigatórios" }, { status: 400 });
@@ -38,6 +41,7 @@ export async function POST(req: NextRequest) {
         formato: formato || null,
         areaHectares: areaHectares != null ? Number(areaHectares) : null,
         observacoes: observacoes || null,
+        grupoContratoId: grupoContratoId || null,
       },
     });
     return NextResponse.json({ success: true, data: contrato }, { status: 201 });

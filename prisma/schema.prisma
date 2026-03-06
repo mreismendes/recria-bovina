@@ -36,28 +36,52 @@ enum UserRole {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GRUPO DE CONTRATOS
+// Agrupa múltiplos contratos que funcionam como uma unidade lógica.
+// Um lote pode pastar em várias fazendas parceiras simultaneamente; o grupo
+// permite tratar esses contratos como se fossem um só.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model GrupoContrato {
+  id        String  @id @default(cuid())
+  nome      String  @unique               // nome amigável, ex: "Grupo Norte"
+  descricao String?
+  ativo     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contratos Contrato[]
+
+  @@map("grupos_contrato")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CONTRATO (Parceria / Fazenda parceira)
 // Cada contrato representa uma parceria com uma fazenda onde o gado é alocado.
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Contrato {
-  id            String           @id @default(cuid())
-  idContrato    String           @unique              // código definido pelo usuário, ex: "RCA-2025-001"
-  nomeFazenda   String
-  proprietario  String?
-  comunidade    String?
-  cidade        String?
-  estado        String?
-  formato       FormatoContrato?
-  areaHectares  Float?
-  observacoes   String?
-  ativo         Boolean          @default(true)
+  id               String           @id @default(cuid())
+  idContrato       String           @unique              // código definido pelo usuário, ex: "RCA-2025-001"
+  nomeFazenda      String
+  proprietario     String?
+  comunidade       String?
+  cidade           String?
+  estado           String?
+  formato          FormatoContrato?
+  areaHectares     Float?
+  observacoes      String?
+  ativo            Boolean          @default(true)
+  grupoContratoId  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  lotes Lote[]
+  grupoContrato GrupoContrato? @relation(fields: [grupoContratoId], references: [id])
+  lotes         Lote[]
 
+  @@index([grupoContratoId])
   @@map("contratos")
 }
 
