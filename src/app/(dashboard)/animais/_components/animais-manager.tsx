@@ -88,7 +88,7 @@ export function AnimaisManager({ initialAnimais, lotes, userRole }: { initialAni
     form.reset({
       brinco: item.brinco, rfid: item.rfid ?? "", nome: item.nome ?? "", raca: item.raca ?? "",
       sexo: item.sexo as any, dataNascimento: item.dataNascimento?.toString().split("T")[0] ?? "",
-      pesoEntradaKg: item.pesoEntradaKg, custoAquisicao: item.custoAquisicao,
+      pesoEntradaKg: String(item.pesoEntradaKg) as any, custoAquisicao: String(item.custoAquisicao) as any,
       tipoEntrada: item.tipoEntrada as any, origem: item.origem ?? "", gtaEntrada: "",
       notaFiscal: item.notaFiscal ?? "",
       loteId: item.pertinencias[0]?.lote.id ?? lotes[0]?.id ?? "",
