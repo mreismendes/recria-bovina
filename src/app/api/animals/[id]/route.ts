@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       where: { id: params.id },
       include: {
         pertinencias: { include: { lote: true }, orderBy: { dataInicio: "desc" } },
-        pesagens: { orderBy: { dataPesagem: "desc" } },
+        pesagens: { where: { ativo: true }, orderBy: { dataPesagem: "desc" } },
         rateiosMed: { include: { apontamento: { include: { produto: true } } }, orderBy: { createdAt: "desc" } },
         rateiosSuplem: { include: { apontamento: { include: { produto: true } } }, orderBy: { createdAt: "desc" } },
         carencias: { where: { ativa: true }, include: { apontamento: { include: { produto: true } } } },

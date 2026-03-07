@@ -35,6 +35,7 @@ export default async function PesagensPage() {
       orderBy: { brinco: "asc" },
       include: {
         pesagens: {
+          where: { ativo: true },
           orderBy: { dataPesagem: "desc" },
           take: 1,
         },

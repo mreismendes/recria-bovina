@@ -115,6 +115,22 @@ export const sessaoPesagemSchema = z.object({
 
 export type SessaoPesagemFormData = z.infer<typeof sessaoPesagemSchema>;
 
+export const editPesagemSchema = z.object({
+  pesoKg: z.preprocess(brNumber, z.number({ required_error: "Peso é obrigatório" }).positive("Peso deve ser maior que zero")),
+  jejumHoras: z.preprocess(brNumber, z.number().min(0).max(72).optional().nullable()),
+  responsavel: z.string().max(100).optional().nullable(),
+  observacoes: z.string().max(500).optional().nullable(),
+  motivoAlteracao: z.string().min(10, "Justificativa deve ter ao menos 10 caracteres").max(500),
+});
+
+export type EditPesagemFormData = z.infer<typeof editPesagemSchema>;
+
+export const deletePesagemSchema = z.object({
+  motivoAlteracao: z.string().min(10, "Justificativa deve ter ao menos 10 caracteres").max(500),
+});
+
+export type DeletePesagemFormData = z.infer<typeof deletePesagemSchema>;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // APONTAMENTO SUPLEMENTO
 // ─────────────────────────────────────────────────────────────────────────────

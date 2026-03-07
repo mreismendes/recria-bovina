@@ -12,7 +12,7 @@ async function getDashboardStats() {
     prisma.animal.count({
       where: {
         status: "ATIVO",
-        pesagens: { none: { dataPesagem: { gte: limiteAlertaPesagem } } },
+        pesagens: { none: { ativo: true, dataPesagem: { gte: limiteAlertaPesagem } } },
       },
     }),
     prisma.carenciaMedicamento.count({

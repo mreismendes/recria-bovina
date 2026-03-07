@@ -98,14 +98,17 @@ export const animaisApi = {
 // ── Pesagens ─────────────────────────────────────────────────────────────────
 
 export const pesagensApi = {
-  list: (params?: { loteId?: string; animalId?: string; limit?: number }) => {
+  list: (params?: { loteId?: string; animalId?: string; limit?: number; includeDeleted?: boolean }) => {
     const qs = new URLSearchParams();
     if (params?.loteId) qs.set("loteId", params.loteId);
     if (params?.animalId) qs.set("animalId", params.animalId);
     if (params?.limit) qs.set("limit", String(params.limit));
+    if (params?.includeDeleted) qs.set("includeDeleted", "true");
     return apiFetch<any[]>(`/api/weighings${qs.toString() ? `?${qs}` : ""}`);
   },
   registrarSessao: (data: unknown) => apiFetch<any[]>("/api/weighings", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: string, data: unknown) => apiFetch<any>(`/api/weighings/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  remove: (id: string, data: { motivoAlteracao: string }) => apiFetch<any>(`/api/weighings/${id}`, { method: "DELETE", body: JSON.stringify(data) }),
 };
 
 // ── Usuários ─────────────────────────────────────────────────────────────────

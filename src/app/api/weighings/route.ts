@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const loteId = searchParams.get("loteId");
     const animalId = searchParams.get("animalId");
+    const includeDeleted = searchParams.get("includeDeleted") === "true";
     const limit = parseInt(searchParams.get("limit") ?? "100", 10);
 
     // When filtering by lot, we need to find weighings where the animal
@@ -27,6 +28,7 @@ export async function GET(req: NextRequest) {
       pesagens = await prisma.pesagem.findMany({
         where: {
           ...(animalId && { animalId }),
+          ...(!includeDeleted && { ativo: true }),
           animal: {
             pertinencias: {
               some: { loteId },
@@ -64,6 +66,7 @@ export async function GET(req: NextRequest) {
       pesagens = await prisma.pesagem.findMany({
         where: {
           ...(animalId && { animalId }),
+          ...(!includeDeleted && { ativo: true }),
         },
         include: {
           animal: {
@@ -141,7 +144,7 @@ export async function POST(req: NextRequest) {
 
         // Buscar última pesagem DENTRO da transação (fix: era fora do tx)
         const ultima = await tx.pesagem.findFirst({
-          where: { animalId: p.animalId },
+          where: { animalId: p.animalId, ativo: true },
           orderBy: { dataPesagem: "desc" },
         });
 

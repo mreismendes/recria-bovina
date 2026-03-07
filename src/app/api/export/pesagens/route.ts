@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
     if (loteIds.length > 0) {
       const allPesagens = await prisma.pesagem.findMany({
         where: {
+          ativo: true,
           ...(Object.keys(dateFilter).length > 0 && { dataPesagem: dateFilter }),
           animal: {
             pertinencias: {
@@ -59,6 +60,7 @@ export async function GET(req: NextRequest) {
     } else {
       pesagens = await prisma.pesagem.findMany({
         where: {
+          ativo: true,
           ...(Object.keys(dateFilter).length > 0 && { dataPesagem: dateFilter }),
         },
         include: {

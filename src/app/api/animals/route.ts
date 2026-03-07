@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
           include: { lote: true },
         },
         pesagens: {
+          where: { ativo: true },
           orderBy: { dataPesagem: "desc" },
           take: 1,
         },

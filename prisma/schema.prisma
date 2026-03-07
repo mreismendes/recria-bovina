@@ -244,6 +244,12 @@ model Pesagem {
   gmdPeriodo  Float? // kg/dia desde a pesagem anterior
   diasPeriodo Int?   // dias desde a pesagem anterior
 
+  // Soft-delete & audit trail
+  ativo            Boolean  @default(true)
+  motivoAlteracao  String?  // justificativa obrigatória para edição/exclusão
+  alteradoPor      String?  // quem fez a alteração
+  alteradoEm       DateTime? // quando foi alterado/excluído
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
