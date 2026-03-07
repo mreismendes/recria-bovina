@@ -280,8 +280,8 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
                   <FormItem>
                     <FormLabel>Preço unitário (R$)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" min={0} placeholder="0,00" {...field}
-                        value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? undefined : +e.target.value)} />
+                      <Input type="text" inputMode="decimal" placeholder="0,00" {...field}
+                        value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? undefined : e.target.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

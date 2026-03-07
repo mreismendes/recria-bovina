@@ -10,7 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Separator } from "@/components/ui/separator";
 import { Scale, TrendingUp, TrendingDown, Minus, ArrowRight } from "lucide-react";
 import { pesagensApi } from "@/lib/api";
-import { formatPeso, formatCurrency, formatDate, todayLocalStr } from "@/lib/utils";
+import { formatPeso, formatCurrency, formatDate, formatNumber, parseBrNumber, todayLocalStr } from "@/lib/utils";
 
 type Lote = { id: string; nome: string; contrato?: { nomeFazenda: string } | null; grupoContrato?: { nome: string } | null };
 type AnimalNoLote = {
@@ -123,7 +123,7 @@ function NovaSessao({
     setPesos((prev) => ({ ...prev, [animalId]: value }));
   }
 
-  const pesagensPreenchidas = animais.filter((a) => pesos[a.id] && parseFloat(pesos[a.id]) > 0);
+  const pesagensPreenchidas = animais.filter((a) => pesos[a.id] && parseBrNumber(pesos[a.id]) > 0);
 
   async function handleSubmit() {
     if (pesagensPreenchidas.length === 0) {
@@ -139,7 +139,7 @@ function NovaSessao({
         dataPesagem,
         pesagens: pesagensPreenchidas.map((a) => ({
           animalId: a.id,
-          pesoKg: parseFloat(pesos[a.id]),
+          pesoKg: parseBrNumber(pesos[a.id]),
         })),
         responsavel: responsavel || null,
         observacoes: observacoes || null,
@@ -175,7 +175,7 @@ function NovaSessao({
           </p>
           {gmdMedio != null && (
             <p className="text-xs text-green-700 mt-1">
-              GMD médio da sessão: {gmdMedio.toFixed(3)} kg/dia | Ganho total acumulado: {totalGanho.toFixed(1)} kg
+              GMD médio da sessão: {formatNumber(gmdMedio, 3)} kg/dia | Ganho total acumulado: {formatNumber(totalGanho, 1)} kg
             </p>
           )}
         </div>
@@ -198,7 +198,7 @@ function NovaSessao({
                 <TableRow key={r.animalId}>
                   <TableCell className="font-mono font-semibold text-green-700">{r.brinco}</TableCell>
                   <TableCell className="text-right text-sm">
-                    {r.pesoAnterior ? `${r.pesoAnterior.toFixed(1)} kg` : "—"}
+                    {r.pesoAnterior ? `${formatNumber(r.pesoAnterior, 1)} kg` : "—"}
                   </TableCell>
                   <TableCell className="text-center">
                     {r.ganhoKg != null ? (
@@ -211,18 +211,18 @@ function NovaSessao({
                       )
                     ) : null}
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-sm">{r.pesoKg.toFixed(1)} kg</TableCell>
+                  <TableCell className="text-right font-semibold text-sm">{formatNumber(r.pesoKg, 1)} kg</TableCell>
                   <TableCell className="text-right text-sm">
                     {r.ganhoKg != null ? (
                       <span className={r.ganhoKg >= 0 ? "text-green-600" : "text-red-600"}>
-                        {r.ganhoKg > 0 ? "+" : ""}{r.ganhoKg.toFixed(1)} kg
+                        {r.ganhoKg > 0 ? "+" : ""}{formatNumber(r.ganhoKg, 1)} kg
                       </span>
                     ) : "—"}
                   </TableCell>
                   <TableCell className="text-right text-sm">
                     {r.gmdPeriodo != null ? (
                       <span className={r.gmdPeriodo >= 0 ? "text-green-600" : "text-red-600"}>
-                        {r.gmdPeriodo.toFixed(3)} kg/dia
+                        {formatNumber(r.gmdPeriodo, 3)} kg/dia
                       </span>
                     ) : "—"}
                   </TableCell>
@@ -317,7 +317,7 @@ function NovaSessao({
                   <TableCell className="text-sm text-gray-500">{a.nome || "—"}</TableCell>
                   <TableCell className="text-right text-sm">
                     {a.ultimoPeso ? (
-                      <span>{a.ultimoPeso.toFixed(1)} kg</span>
+                      <span>{formatNumber(a.ultimoPeso, 1)} kg</span>
                     ) : (
                       <span className="text-gray-400">—</span>
                     )}
@@ -331,11 +331,10 @@ function NovaSessao({
                   </TableCell>
                   <TableCell className="text-right">
                     <Input
-                      type="number"
-                      step="0.1"
-                      min={0}
+                      type="text"
+                      inputMode="decimal"
                       className="w-28 ml-auto text-right"
-                      placeholder="0.0"
+                      placeholder="0,0"
                       value={pesos[a.id] ?? ""}
                       onChange={(e) => updatePeso(a.id, e.target.value)}
                     />
@@ -454,7 +453,7 @@ function Historico({ lotes }: { lotes: Lote[] }) {
                 {gmdMedio != null && (
                   <p className="text-xs text-gray-500">
                     GMD médio: <span className={gmdMedio >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                      {gmdMedio.toFixed(3)} kg/dia
+                      {formatNumber(gmdMedio, 3)} kg/dia
                     </span>
                   </p>
                 )}
@@ -479,11 +478,11 @@ function Historico({ lotes }: { lotes: Lote[] }) {
                           {p.animal.brinco}
                         </TableCell>
                         <TableCell className="text-sm text-gray-500">{p.animal.nome || "—"}</TableCell>
-                        <TableCell className="text-right font-mono text-sm">{p.pesoKg.toFixed(1)}</TableCell>
+                        <TableCell className="text-right font-mono text-sm">{formatNumber(p.pesoKg, 1)}</TableCell>
                         <TableCell className="text-right text-sm">
                           {p.gmdPeriodo != null ? (
                             <span className={p.gmdPeriodo >= 0 ? "text-green-600" : "text-red-600"}>
-                              {p.gmdPeriodo.toFixed(3)}
+                              {formatNumber(p.gmdPeriodo, 3)}
                             </span>
                           ) : "—"}
                         </TableCell>

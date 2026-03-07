@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { animalSchema, type AnimalFormData } from "@/lib/validations";
 import { animaisApi } from "@/lib/api";
-import { formatPeso, formatCurrency, SEXO_LABEL, TIPO_ENTRADA_LABEL, todayLocalStr } from "@/lib/utils";
+import { formatPeso, formatCurrency, parseBrNumber, SEXO_LABEL, TIPO_ENTRADA_LABEL, todayLocalStr } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { MovimentacaoSheet } from "./movimentacao-sheet";
 import { SaidaSheet } from "./saida-sheet";
@@ -476,8 +476,8 @@ export function AnimaisManager({ initialAnimais, lotes, userRole }: { initialAni
                           <FormItem>
                             <FormLabel>Peso de entrada (kg) *</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.1" min={0} placeholder="Ex: 245.0" {...field}
-                                value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? undefined : +e.target.value)} />
+                              <Input type="text" inputMode="decimal" placeholder="Ex: 245,0" {...field}
+                                value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? undefined : e.target.value)} />
                             </FormControl>
                             <FormDescription>Gera a 1ª pesagem automática.</FormDescription>
                             <FormMessage />
@@ -487,8 +487,8 @@ export function AnimaisManager({ initialAnimais, lotes, userRole }: { initialAni
                           <FormItem>
                             <FormLabel>Custo de aquisição (R$)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" min={0} placeholder="0,00" {...field}
-                                value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? undefined : +e.target.value)} />
+                              <Input type="text" inputMode="decimal" placeholder="0,00" {...field}
+                                value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? undefined : e.target.value)} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

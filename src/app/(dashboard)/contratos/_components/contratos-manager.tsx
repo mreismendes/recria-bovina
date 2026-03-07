@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { contratosApi } from "@/lib/api";
+import { parseBrNumber } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 const FORMATO_OPTIONS = [
@@ -32,7 +33,14 @@ const schema = z.object({
   cidade:          z.string().max(200).optional().nullable(),
   estado:          z.string().max(2).optional().nullable(),
   formato:         z.enum(["PARCERIA", "ARRENDAMENTO"]).optional().nullable(),
-  areaHectares:    z.coerce.number().positive("Área deve ser positiva").optional().nullable(),
+  areaHectares:    z.preprocess(
+    (val) => {
+      if (val === null || val === undefined || val === "") return null;
+      const num = parseBrNumber(String(val));
+      return isNaN(num) ? val : num;
+    },
+    z.number().positive("Área deve ser positiva").optional().nullable()
+  ),
   observacoes:     z.string().max(500).optional().nullable(),
   grupoContratoId: z.string().optional().nullable(),
 });
@@ -284,7 +292,7 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
                   <FormItem>
                     <FormLabel>Área (ha)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="Ex: 150.5" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? null : e.target.value)} />
+                      <Input type="text" inputMode="decimal" placeholder="Ex: 150,5" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? null : e.target.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
