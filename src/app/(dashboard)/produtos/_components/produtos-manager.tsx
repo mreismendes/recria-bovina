@@ -70,7 +70,7 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
     setTipoGrupo(isSuplemento(item.tipo) ? "suplemento" : "medicamento");
     form.reset({
       nome: item.nome, tipo: item.tipo as any, unidadeMedida: item.unidadeMedida,
-      precoUnitario: item.precoUnitario ?? undefined, fabricante: item.fabricante ?? "",
+      precoUnitario: (item.precoUnitario != null ? String(item.precoUnitario) : undefined) as any, fabricante: item.fabricante ?? "",
       principioAtivo: item.principioAtivo ?? "", viaAdministracao: item.viaAdministracao ?? "",
       carenciaDias: item.carenciaDias ?? undefined, observacoes: item.observacoes ?? "",
     });

@@ -90,7 +90,7 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
       cidade: item.cidade ?? "",
       estado: item.estado ?? "",
       formato: (item.formato as "PARCERIA" | "ARRENDAMENTO") ?? null,
-      areaHectares: item.areaHectares ?? null,
+      areaHectares: (item.areaHectares != null ? String(item.areaHectares) : null) as any,
       observacoes: item.observacoes ?? "",
       grupoContratoId: item.grupoContratoId ?? null,
     });
