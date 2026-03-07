@@ -433,6 +433,11 @@ function Historico({ lotes }: { lotes: Lote[] }) {
         </div>
       ) : (
         sessoesOrdenadas.map(([data, pesagensData]) => {
+          const pesoMedio =
+            pesagensData.length > 0
+              ? pesagensData.reduce((s, p) => s + p.pesoKg, 0) / pesagensData.length
+              : null;
+
           const gmdMedio =
             pesagensData.filter((p) => p.gmdPeriodo != null).length > 0
               ? pesagensData.reduce((s, p) => s + (p.gmdPeriodo ?? 0), 0) /
@@ -450,13 +455,22 @@ function Historico({ lotes }: { lotes: Lote[] }) {
                     {pesagensData.length} animal(is)
                   </Badge>
                 </div>
-                {gmdMedio != null && (
-                  <p className="text-xs text-gray-500">
-                    GMD médio: <span className={gmdMedio >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                      {formatNumber(gmdMedio, 3)} kg/dia
-                    </span>
-                  </p>
-                )}
+                <div className="flex items-center gap-4">
+                  {pesoMedio != null && (
+                    <p className="text-xs text-gray-500">
+                      Peso médio: <span className="text-gray-700 font-medium">
+                        {formatNumber(pesoMedio, 1)} kg
+                      </span>
+                    </p>
+                  )}
+                  {gmdMedio != null && (
+                    <p className="text-xs text-gray-500">
+                      GMD médio: <span className={gmdMedio >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                        {formatNumber(gmdMedio, 3)} kg/dia
+                      </span>
+                    </p>
+                  )}
+                </div>
               </div>
               <Table>
                 <TableHeader>
