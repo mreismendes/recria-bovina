@@ -174,6 +174,22 @@ export const produtoSchema = z.object({
 export type ProdutoFormData = z.infer<typeof produtoSchema>;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FAZENDA
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const fazendaSchema = z.object({
+  nome: z.string().min(1, "Nome da fazenda é obrigatório").max(200),
+  proprietario: z.string().max(200).optional().nullable(),
+  comunidade: z.string().max(200).optional().nullable(),
+  cidade: z.string().max(200).optional().nullable(),
+  estado: z.string().max(2).optional().nullable(),
+  areaHectares: z.preprocess(brNumber, z.number().positive("Área deve ser positiva").optional().nullable()),
+  observacoes: z.string().max(500).optional().nullable(),
+});
+
+export type FazendaFormData = z.infer<typeof fazendaSchema>;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // GRUPO DE CONTRATOS
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -58,6 +58,31 @@ model GrupoContrato {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FAZENDA (Cadastro de fazendas)
+// Registro permanente de fazendas. Permite reutilizar a mesma fazenda em
+// múltiplos contratos ao longo do tempo.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Fazenda {
+  id           String  @id @default(cuid())
+  nome         String  @unique               // nome da fazenda, ex: "Fazenda Santa Fé"
+  proprietario String?
+  comunidade   String?
+  cidade       String?
+  estado       String?
+  areaHectares Float?
+  observacoes  String?
+  ativo        Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contratos Contrato[]
+
+  @@map("fazendas")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CONTRATO (Parceria / Fazenda parceira)
 // Cada contrato representa uma parceria com uma fazenda onde o gado é alocado.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -75,14 +100,17 @@ model Contrato {
   observacoes      String?
   ativo            Boolean          @default(true)
   grupoContratoId  String?
+  fazendaId        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   grupoContrato GrupoContrato? @relation(fields: [grupoContratoId], references: [id])
+  fazenda       Fazenda?       @relation(fields: [fazendaId], references: [id])
   lotes         Lote[]
 
   @@index([grupoContratoId])
+  @@index([fazendaId])
   @@map("contratos")
 }
 
