@@ -54,6 +54,33 @@ export function withdrawalDaysLeft(d: Date) { return Math.max(0, differenceInDay
 
 // ─── Aliases PT-BR (usados nos componentes) ────────────────────────────────
 export const formatPeso = formatWeight
+
+/** Formats a number using Brazilian notation (comma as decimal separator). */
+export function formatNumber(value: number, decimals: number): string {
+  return value.toLocaleString('pt-BR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })
+}
+
+/**
+ * Parses a Brazilian-formatted number string to a JS number.
+ * "1.234,56" → 1234.56, "245,0" → 245.0, "245.0" → 245.0 (also accepts dot notation)
+ */
+export function parseBrNumber(str: string): number {
+  if (!str) return NaN
+  const trimmed = str.trim()
+  // If it has both dot and comma, it's Brazilian format: 1.234,56
+  if (trimmed.includes(',') && trimmed.includes('.')) {
+    return parseFloat(trimmed.replace(/\./g, '').replace(',', '.'))
+  }
+  // If it has comma but no dot, comma is decimal: 245,5
+  if (trimmed.includes(',')) {
+    return parseFloat(trimmed.replace(',', '.'))
+  }
+  // Otherwise treat as standard: 245.5
+  return parseFloat(trimmed)
+}
 export const SEXO_LABEL = SEX_LABEL
 export const TIPO_ENTRADA_LABEL = ENTRY_TYPE_LABEL
 export const TIPO_PRODUTO_LABEL = PRODUCT_TYPE_LABEL

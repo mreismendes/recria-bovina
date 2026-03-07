@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Upload, Download, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Loader2, Scale, Beef } from "lucide-react";
+import { formatNumber } from "@/lib/utils";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -541,7 +542,7 @@ export function ImportManager({
                     </TableCell>
                     <TableCell className="font-mono text-sm font-semibold text-green-700">{r.data.brinco || "—"}</TableCell>
                     <TableCell className="text-sm">{r.data.sexo === "MACHO" ? "M" : r.data.sexo === "FEMEA" ? "F" : "—"}</TableCell>
-                    <TableCell className="text-right text-sm">{r.data.pesoEntradaKg?.toFixed(1) ?? "—"}</TableCell>
+                    <TableCell className="text-right text-sm">{r.data.pesoEntradaKg != null ? formatNumber(r.data.pesoEntradaKg, 1) : "—"}</TableCell>
                     <TableCell>
                       {r.messages.map((m, j) => (
                         <p key={j} className={`text-xs ${r.status === "error" ? "text-red-600" : "text-amber-600"}`}>{m}</p>
@@ -591,7 +592,7 @@ export function ImportManager({
                     </TableCell>
                     <TableCell className="font-mono text-sm font-semibold text-green-700">{r.data.brinco || "—"}</TableCell>
                     <TableCell className="text-sm">{r.data.dataPesagem || "—"}</TableCell>
-                    <TableCell className="text-right text-sm">{r.data.pesoKg?.toFixed(1) ?? "—"}</TableCell>
+                    <TableCell className="text-right text-sm">{r.data.pesoKg != null ? formatNumber(r.data.pesoKg, 1) : "—"}</TableCell>
                     <TableCell className="text-right text-sm text-gray-500">{r.data.jejumHoras != null ? `${r.data.jejumHoras}h` : "—"}</TableCell>
                     <TableCell className="text-sm text-gray-500">{r.data.responsavel || "—"}</TableCell>
                     <TableCell>

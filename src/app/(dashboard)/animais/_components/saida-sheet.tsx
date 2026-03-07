@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { animaisApi } from "@/lib/api";
-import { formatCurrency, todayLocalStr } from "@/lib/utils";
+import { formatCurrency, formatNumber, parseBrNumber, todayLocalStr } from "@/lib/utils";
 
 type Animal = { id: string; brinco: string; nome?: string | null; pesoEntradaKg: number };
 
@@ -81,11 +81,11 @@ export function SaidaSheet({
       const data = await animaisApi.saida({
         animais: pesos.map((p) => ({
           animalId: p.animalId,
-          pesoSaidaKg: p.pesoSaidaKg ? parseFloat(p.pesoSaidaKg) : null,
+          pesoSaidaKg: p.pesoSaidaKg ? parseBrNumber(p.pesoSaidaKg) : null,
         })),
         tipoSaida,
         dataSaida,
-        valorVendaTotal: valorVendaTotal ? parseFloat(valorVendaTotal) : null,
+        valorVendaTotal: valorVendaTotal ? parseBrNumber(valorVendaTotal) : null,
         comprador: comprador || null,
         cnpjCpf: cnpjCpf || null,
         municipioDestino: municipioDestino || null,
@@ -138,7 +138,7 @@ export function SaidaSheet({
                           </span>
                         )}
                         {p.gmdTotal != null && (
-                          <span>GMD: {p.gmdTotal.toFixed(3)} kg/dia</span>
+                          <span>GMD: {formatNumber(p.gmdTotal, 3)} kg/dia</span>
                         )}
                       </div>
                     </div>
@@ -224,12 +224,11 @@ export function SaidaSheet({
                     <div className="flex-1 min-w-0">
                       <span className="font-mono text-sm font-semibold text-green-700">{a.brinco}</span>
                       {a.nome && <span className="text-xs text-gray-400 ml-2">{a.nome}</span>}
-                      <span className="text-xs text-gray-400 ml-2">(entrada: {a.pesoEntradaKg} kg)</span>
+                      <span className="text-xs text-gray-400 ml-2">(entrada: {formatNumber(a.pesoEntradaKg, 1)} kg)</span>
                     </div>
                     <Input
-                      type="number"
-                      step="0.1"
-                      min={0}
+                      type="text"
+                      inputMode="decimal"
                       className="w-28"
                       placeholder="kg"
                       value={peso?.pesoSaidaKg ?? ""}
@@ -253,9 +252,8 @@ export function SaidaSheet({
                   <div>
                     <label className="text-sm font-medium">Valor total da venda (R$)</label>
                     <Input
-                      type="number"
-                      step="0.01"
-                      min={0}
+                      type="text"
+                      inputMode="decimal"
                       className="mt-1"
                       placeholder="0,00"
                       value={valorVendaTotal}
@@ -263,7 +261,7 @@ export function SaidaSheet({
                     />
                     {animais.length > 1 && valorVendaTotal && (
                       <p className="text-xs text-gray-500 mt-1">
-                        = {formatCurrency(parseFloat(valorVendaTotal) / animais.length)} por cabeça
+                        = {formatCurrency(parseBrNumber(valorVendaTotal) / animais.length)} por cabeça
                       </p>
                     )}
                   </div>

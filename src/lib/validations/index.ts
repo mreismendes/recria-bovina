@@ -4,6 +4,18 @@
  */
 
 import { z } from "zod";
+import { parseBrNumber } from "@/lib/utils";
+
+/** Preprocessor that converts Brazilian-formatted number strings to JS numbers. */
+function brNumber(val: unknown): unknown {
+  if (val === null || val === undefined || val === "") return undefined;
+  if (typeof val === "number") return val;
+  if (typeof val === "string") {
+    const num = parseBrNumber(val);
+    return isNaN(num) ? val : num;
+  }
+  return val;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ANIMAL
@@ -16,8 +28,8 @@ export const animalSchema = z.object({
   raca: z.string().max(100).optional().nullable(),
   sexo: z.enum(["MACHO", "FEMEA"]),
   dataNascimento: z.string().optional().nullable(),
-  pesoEntradaKg: z.number({ required_error: "Peso de entrada é obrigatório" }).positive("Peso deve ser maior que zero"),
-  custoAquisicao: z.number().min(0).default(0),
+  pesoEntradaKg: z.preprocess(brNumber, z.number({ required_error: "Peso de entrada é obrigatório" }).positive("Peso deve ser maior que zero")),
+  custoAquisicao: z.preprocess(brNumber, z.number().min(0).default(0)),
   tipoEntrada: z.enum(["COMPRA_EXTERNA", "NASCIMENTO_PROPRIO", "TRANSFERENCIA_INTERNA"]),
   origem: z.string().max(200).optional().nullable(),
   gtaEntrada: z.string().max(100).optional().nullable(),
@@ -52,8 +64,8 @@ export const saidaSchema = z
     animalIds: z.array(z.string()).min(1, "Selecione ao menos um animal"),
     tipoSaida: z.enum(["VENDA", "TRANSFERENCIA_EXTERNA", "MORTE", "DESCARTE"]),
     dataSaida: z.string().min(1, "Data de saída é obrigatória"),
-    pesoSaidaKg: z.number().positive().optional().nullable(),
-    valorVenda: z.number().min(0).optional().nullable(),
+    pesoSaidaKg: z.preprocess(brNumber, z.number().positive().optional().nullable()),
+    valorVenda: z.preprocess(brNumber, z.number().min(0).optional().nullable()),
     comprador: z.string().max(200).optional().nullable(),
     cnpjCpf: z.string().max(20).optional().nullable(),
     municipioDestino: z.string().max(200).optional().nullable(),
@@ -79,8 +91,8 @@ export type SaidaFormData = z.infer<typeof saidaSchema>;
 export const pesagemSchema = z.object({
   animalId: z.string().min(1),
   dataPesagem: z.string().min(1, "Data é obrigatória"),
-  pesoKg: z.number({ required_error: "Peso é obrigatório" }).positive("Peso deve ser maior que zero"),
-  jejumHoras: z.number().min(0).max(72).optional().nullable(),
+  pesoKg: z.preprocess(brNumber, z.number({ required_error: "Peso é obrigatório" }).positive("Peso deve ser maior que zero")),
+  jejumHoras: z.preprocess(brNumber, z.number().min(0).max(72).optional().nullable()),
   responsavel: z.string().max(100).optional().nullable(),
   observacoes: z.string().max(500).optional().nullable(),
 });
@@ -111,8 +123,8 @@ export const apontamentoSuplementoSchema = z.object({
   loteId: z.string().min(1, "Lote é obrigatório"),
   produtoId: z.string().min(1, "Produto é obrigatório"),
   dataApontamento: z.string().min(1, "Data é obrigatória"),
-  quantidadeTotal: z.number().positive("Quantidade deve ser maior que zero"),
-  custoTotal: z.number().min(0, "Custo não pode ser negativo"),
+  quantidadeTotal: z.preprocess(brNumber, z.number().positive("Quantidade deve ser maior que zero")),
+  custoTotal: z.preprocess(brNumber, z.number().min(0, "Custo não pode ser negativo")),
   modoFornecimento: z.string().max(100).optional().nullable(),
   observacoes: z.string().max(500).optional().nullable(),
 });
@@ -127,9 +139,9 @@ export const apontamentoMedicamentoSchema = z.object({
   loteId: z.string().min(1, "Lote é obrigatório"),
   produtoId: z.string().min(1, "Medicamento é obrigatório"),
   dataApontamento: z.string().min(1, "Data é obrigatória"),
-  doseTotalAplicada: z.number().positive("Dose deve ser maior que zero"),
+  doseTotalAplicada: z.preprocess(brNumber, z.number().positive("Dose deve ser maior que zero")),
   unidadeDose: z.string().min(1).default("mL"),
-  custoTotal: z.number().min(0),
+  custoTotal: z.preprocess(brNumber, z.number().min(0)),
   loteProduto: z.string().max(100).optional().nullable(),
   validade: z.string().optional().nullable(),
   carenciaDias: z.number().int().min(0, "Carência não pode ser negativa"),
@@ -155,7 +167,7 @@ export const produtoSchema = z.object({
   viaAdministracao: z.string().max(100).optional().nullable(),
   carenciaDias: z.number().int().min(0).optional().nullable(),
   unidadeMedida: z.string().min(1).default("kg"),
-  precoUnitario: z.number().min(0).optional().nullable(),
+  precoUnitario: z.preprocess(brNumber, z.number().min(0).optional().nullable()),
   observacoes: z.string().max(500).optional().nullable(),
 });
 
