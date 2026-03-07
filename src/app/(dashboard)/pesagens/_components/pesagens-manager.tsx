@@ -459,7 +459,7 @@ function Historico({ lotes }: { lotes: Lote[] }) {
                   {pesoMedio != null && (
                     <p className="text-xs text-gray-500">
                       Peso médio: <span className="text-gray-700 font-medium">
-                        {formatNumber(pesoMedio, 1)} kg
+                        {formatNumber(pesoMedio, 1)} kg ({formatNumber(pesoMedio / 30, 1)} @)
                       </span>
                     </p>
                   )}
