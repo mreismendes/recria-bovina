@@ -34,4 +34,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["/bin/sh", "-c", "echo '>>> Syncing database schema...' && node ./node_modules/prisma/build/index.js db push --schema=./prisma/schema.prisma --accept-data-loss --skip-generate && echo '>>> Schema synced' && node ./scripts/create-admin.js && exec node server.js"]
+CMD ["/bin/sh", "-c", "echo '>>> Syncing database schema...' && node ./node_modules/prisma/build/index.js db push --schema=./prisma/schema.prisma --accept-data-loss --skip-generate && echo '>>> Schema synced' && node ./scripts/create-admin.js && node ./scripts/migrate-farms.js && exec node server.js"]
