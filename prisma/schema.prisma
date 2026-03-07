@@ -65,7 +65,7 @@ model GrupoContrato {
 
 model Fazenda {
   id           String  @id @default(cuid())
-  nome         String  @unique               // nome da fazenda, ex: "Fazenda Santa Fé"
+  nome         String                        // nome da fazenda, ex: "Fazenda Santa Fé"
   proprietario String?
   comunidade   String?
   cidade       String?

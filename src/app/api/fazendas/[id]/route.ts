@@ -10,7 +10,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (!existing) return NextResponse.json({ success: false, error: "Fazenda não encontrada" }, { status: 404 });
 
     if (nome && nome !== existing.nome) {
-      const dup = await prisma.fazenda.findUnique({ where: { nome } });
+      const dup = await prisma.fazenda.findFirst({ where: { nome, id: { not: params.id } } });
       if (dup) return NextResponse.json({ success: false, error: "Já existe uma fazenda com este nome" }, { status: 409 });
     }
 

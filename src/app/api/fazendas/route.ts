@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Nome da fazenda é obrigatório" }, { status: 400 });
     }
 
-    const exists = await prisma.fazenda.findUnique({ where: { nome } });
+    const exists = await prisma.fazenda.findFirst({ where: { nome } });
     if (exists) {
-      return NextResponse.json({ success: false, error: "Já existe uma fazenda com este nome" }, { status: 409 });
+      return NextResponse.json({ success: false, error: "Já existe uma fazenda com este nome. Use dados adicionais para distingui-la." }, { status: 409 });
     }
 
     const fazenda = await prisma.fazenda.create({
