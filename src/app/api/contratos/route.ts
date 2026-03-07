@@ -19,7 +19,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { idContrato, nomeFazenda, proprietario, comunidade, cidade, estado, formato, areaHectares, observacoes, grupoContratoId } = body;
+    const { idContrato, nomeFazenda, proprietario, comunidade, cidade, estado, formato, areaHectares, observacoes, grupoContratoId, fazendaId } = body;
 
     if (!idContrato || !nomeFazenda) {
       return NextResponse.json({ success: false, error: "ID do Contrato e Nome da Fazenda são obrigatórios" }, { status: 400 });
@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
         areaHectares: areaHectares != null ? Number(areaHectares) : null,
         observacoes: observacoes || null,
         grupoContratoId: grupoContratoId || null,
+        fazendaId: fazendaId || null,
       },
     });
     return NextResponse.json({ success: true, data: contrato }, { status: 201 });

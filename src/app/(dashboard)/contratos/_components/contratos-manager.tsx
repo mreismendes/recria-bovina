@@ -43,11 +43,13 @@ const schema = z.object({
   ),
   observacoes:     z.string().max(500).optional().nullable(),
   grupoContratoId: z.string().optional().nullable(),
+  fazendaId:       z.string().optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
 
 type GrupoRef = { id: string; nome: string };
+type FazendaRef = { id: string; nome: string; proprietario?: string | null; comunidade?: string | null; cidade?: string | null; estado?: string | null; areaHectares?: number | null };
 
 type Contrato = {
   id: string; idContrato: string; nomeFazenda: string;
@@ -57,10 +59,12 @@ type Contrato = {
   observacoes?: string | null; ativo: boolean;
   grupoContratoId?: string | null;
   grupoContrato?: GrupoRef | null;
+  fazendaId?: string | null;
+  fazenda?: { id: string; nome: string } | null;
   _count?: { lotes: number };
 };
 
-export function ContratosManager({ initialData, grupos }: { initialData: Contrato[]; grupos: GrupoRef[] }) {
+export function ContratosManager({ initialData, grupos, fazendas }: { initialData: Contrato[]; grupos: GrupoRef[]; fazendas: FazendaRef[] }) {
   const router = useRouter();
   const [items, setItems] = useState(initialData);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -70,12 +74,12 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { idContrato: "", nomeFazenda: "", proprietario: "", comunidade: "", cidade: "", estado: "", formato: null, areaHectares: null, observacoes: "", grupoContratoId: null },
+    defaultValues: { idContrato: "", nomeFazenda: "", proprietario: "", comunidade: "", cidade: "", estado: "", formato: null, areaHectares: null, observacoes: "", grupoContratoId: null, fazendaId: null },
   });
 
   function openCreate() {
     setEditing(null);
-    form.reset({ idContrato: "", nomeFazenda: "", proprietario: "", comunidade: "", cidade: "", estado: "", formato: null, areaHectares: null, observacoes: "", grupoContratoId: null });
+    form.reset({ idContrato: "", nomeFazenda: "", proprietario: "", comunidade: "", cidade: "", estado: "", formato: null, areaHectares: null, observacoes: "", grupoContratoId: null, fazendaId: null });
     setError(null);
     setSheetOpen(true);
   }
@@ -93,9 +97,29 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
       areaHectares: (item.areaHectares != null ? numberToBrInput(item.areaHectares) : null) as any,
       observacoes: item.observacoes ?? "",
       grupoContratoId: item.grupoContratoId ?? null,
+      fazendaId: item.fazendaId ?? null,
     });
     setError(null);
     setSheetOpen(true);
+  }
+
+  function handleFazendaChange(fazendaId: string | null) {
+    form.setValue("fazendaId", fazendaId);
+    if (fazendaId) {
+      const faz = fazendas.find(f => f.id === fazendaId);
+      if (faz) {
+        form.setValue("nomeFazenda", faz.nome);
+        form.setValue("proprietario", faz.proprietario ?? "");
+        form.setValue("comunidade", faz.comunidade ?? "");
+        form.setValue("cidade", faz.cidade ?? "");
+        form.setValue("estado", faz.estado ?? "");
+        if (faz.areaHectares != null) {
+          form.setValue("areaHectares", numberToBrInput(faz.areaHectares) as any);
+        } else {
+          form.setValue("areaHectares", null);
+        }
+      }
+    }
   }
 
   async function onSubmit(data: FormData) {
@@ -104,15 +128,18 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
       const payload = {
         ...data,
         grupoContratoId: data.grupoContratoId || null,
+        fazendaId: data.fazendaId || null,
       };
       if (editing) {
         const updated = await contratosApi.update(editing.id, payload);
         const grupo = grupos.find(g => g.id === payload.grupoContratoId) ?? null;
-        setItems(items.map(i => i.id === editing.id ? { ...i, ...updated, grupoContrato: grupo, grupoContratoId: payload.grupoContratoId } : i));
+        const fazenda = fazendas.find(f => f.id === payload.fazendaId) ?? null;
+        setItems(items.map(i => i.id === editing.id ? { ...i, ...updated, grupoContrato: grupo, grupoContratoId: payload.grupoContratoId, fazenda: fazenda ? { id: fazenda.id, nome: fazenda.nome } : null, fazendaId: payload.fazendaId } : i));
       } else {
         const created = await contratosApi.create(payload);
         const grupo = grupos.find(g => g.id === payload.grupoContratoId) ?? null;
-        setItems([...items, { ...created, _count: { lotes: 0 }, grupoContrato: grupo, grupoContratoId: payload.grupoContratoId }]);
+        const fazenda = fazendas.find(f => f.id === payload.fazendaId) ?? null;
+        setItems([...items, { ...created, _count: { lotes: 0 }, grupoContrato: grupo, grupoContratoId: payload.grupoContratoId, fazenda: fazenda ? { id: fazenda.id, nome: fazenda.nome } : null, fazendaId: payload.fazendaId }]);
       }
       setSheetOpen(false);
       router.refresh();
@@ -218,6 +245,28 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
+              {fazendas.length > 0 && (
+                <FormField control={form.control} name="fazendaId" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fazenda cadastrada</FormLabel>
+                    <Select onValueChange={v => handleFazendaChange(v === NONE_VALUE ? null : v)} value={field.value ?? NONE_VALUE}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar fazenda (opcional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={NONE_VALUE}>Nenhuma (informar manualmente)</SelectItem>
+                        {fazendas.map(f => (
+                          <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              )}
+
               <FormField control={form.control} name="idContrato" render={({ field }) => (
                 <FormItem>
                   <FormLabel>ID do Contrato *</FormLabel>

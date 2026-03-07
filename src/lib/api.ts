@@ -16,6 +16,15 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return (json as { success: true; data: T }).data;
 }
 
+// ── Fazendas ─────────────────────────────────────────────────────────────────
+
+export const fazendasApi = {
+  list: () => apiFetch<any[]>("/api/fazendas"),
+  create: (data: unknown) => apiFetch<any>("/api/fazendas", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: string, data: unknown) => apiFetch<any>(`/api/fazendas/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  remove: (id: string) => apiFetch<any>(`/api/fazendas/${id}`, { method: "DELETE" }),
+};
+
 // ── Grupos de Contratos ───────────────────────────────────────────────────
 
 export const grupoContratosApi = {
