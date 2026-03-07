@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
-    "setup": "npm install && npm run db:generate && npm run db:push && npm run db:seed"
+    "setup": "npm install && npm run db:generate && npm run db:push && npm run db:seed",
+    "db:migrate-farms": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/migrate-farms.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
