@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { animalSchema, type AnimalFormData } from "@/lib/validations";
 import { animaisApi } from "@/lib/api";
-import { formatPeso, formatCurrency, parseBrNumber, SEXO_LABEL, TIPO_ENTRADA_LABEL, todayLocalStr } from "@/lib/utils";
+import { formatPeso, formatCurrency, parseBrNumber, numberToBrInput, SEXO_LABEL, TIPO_ENTRADA_LABEL, todayLocalStr } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { MovimentacaoSheet } from "./movimentacao-sheet";
 import { SaidaSheet } from "./saida-sheet";
@@ -88,7 +88,7 @@ export function AnimaisManager({ initialAnimais, lotes, userRole }: { initialAni
     form.reset({
       brinco: item.brinco, rfid: item.rfid ?? "", nome: item.nome ?? "", raca: item.raca ?? "",
       sexo: item.sexo as any, dataNascimento: item.dataNascimento?.toString().split("T")[0] ?? "",
-      pesoEntradaKg: String(item.pesoEntradaKg) as any, custoAquisicao: String(item.custoAquisicao) as any,
+      pesoEntradaKg: numberToBrInput(item.pesoEntradaKg) as any, custoAquisicao: numberToBrInput(item.custoAquisicao) as any,
       tipoEntrada: item.tipoEntrada as any, origem: item.origem ?? "", gtaEntrada: "",
       notaFiscal: item.notaFiscal ?? "",
       loteId: item.pertinencias[0]?.lote.id ?? lotes[0]?.id ?? "",

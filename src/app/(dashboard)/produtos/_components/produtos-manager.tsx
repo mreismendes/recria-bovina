@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { produtoSchema, type ProdutoFormData } from "@/lib/validations";
 import { produtosApi } from "@/lib/api";
-import { TIPO_PRODUTO_LABEL, isSuplemento, formatCurrency } from "@/lib/utils";
+import { TIPO_PRODUTO_LABEL, isSuplemento, formatCurrency, numberToBrInput } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 const TIPOS_SUPLEMENTO = ["SUPLEMENTO_MINERAL","SUPLEMENTO_PROTEICO","SUPLEMENTO_ENERGETICO","SUPLEMENTO_MISTO"] as const;
@@ -70,7 +70,7 @@ export function ProdutosManager({ initialProdutos }: { initialProdutos: Produto[
     setTipoGrupo(isSuplemento(item.tipo) ? "suplemento" : "medicamento");
     form.reset({
       nome: item.nome, tipo: item.tipo as any, unidadeMedida: item.unidadeMedida,
-      precoUnitario: (item.precoUnitario != null ? String(item.precoUnitario) : undefined) as any, fabricante: item.fabricante ?? "",
+      precoUnitario: (item.precoUnitario != null ? numberToBrInput(item.precoUnitario) : undefined) as any, fabricante: item.fabricante ?? "",
       principioAtivo: item.principioAtivo ?? "", viaAdministracao: item.viaAdministracao ?? "",
       carenciaDias: item.carenciaDias ?? undefined, observacoes: item.observacoes ?? "",
     });
