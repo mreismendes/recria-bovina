@@ -55,6 +55,12 @@ export function withdrawalDaysLeft(d: Date) { return Math.max(0, differenceInDay
 // ─── Aliases PT-BR (usados nos componentes) ────────────────────────────────
 export const formatPeso = formatWeight
 
+/** Converts a number to a Brazilian-formatted string for use in form inputs. */
+export function numberToBrInput(value: number | null | undefined): string {
+  if (value == null) return ""
+  return String(value).replace('.', ',')
+}
+
 /** Formats a number using Brazilian notation (comma as decimal separator). */
 export function formatNumber(value: number, decimals: number): string {
   return value.toLocaleString('pt-BR', {

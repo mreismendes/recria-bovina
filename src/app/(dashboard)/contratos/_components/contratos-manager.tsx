@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { contratosApi } from "@/lib/api";
-import { parseBrNumber } from "@/lib/utils";
+import { parseBrNumber, numberToBrInput } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 const FORMATO_OPTIONS = [
@@ -90,7 +90,7 @@ export function ContratosManager({ initialData, grupos }: { initialData: Contrat
       cidade: item.cidade ?? "",
       estado: item.estado ?? "",
       formato: (item.formato as "PARCERIA" | "ARRENDAMENTO") ?? null,
-      areaHectares: item.areaHectares ?? null,
+      areaHectares: numberToBrInput(item.areaHectares) || null,
       observacoes: item.observacoes ?? "",
       grupoContratoId: item.grupoContratoId ?? null,
     });
