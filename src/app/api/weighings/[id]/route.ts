@@ -73,8 +73,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ success: false, error: "Pesagem não encontrada" }, { status: 404 });
     }
 
-    // Bloquear edição de pesagens ENTRADA e SAIDA
-    if (pesagem.tipo === "ENTRADA" || pesagem.tipo === "SAIDA") {
+    // Bloquear edição de pesagens SAIDA
+    if (pesagem.tipo === "SAIDA") {
       return NextResponse.json(
         { success: false, error: `Pesagem do tipo ${pesagem.tipo} não pode ser editada` },
         { status: 400 }
@@ -83,10 +83,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const resultado = await prisma.$transaction(async (tx) => {
       // Recalcular GMD desta pesagem (caso peso tenha mudado)
+      // ENTRADA não tem pesagem anterior, então gmdPeriodo/diasPeriodo ficam null
       let gmdPeriodo = pesagem.gmdPeriodo;
       let diasPeriodo = pesagem.diasPeriodo;
 
-      if (pesoKg !== pesagem.pesoKg) {
+      if (pesoKg !== pesagem.pesoKg && pesagem.tipo !== "ENTRADA") {
         // Buscar pesagem ativa anterior
         const anterior = await tx.pesagem.findFirst({
           where: {
@@ -120,6 +121,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
           animal: { select: { id: true, brinco: true, nome: true } },
         },
       });
+
+      // Se é pesagem de ENTRADA, sincronizar Animal.pesoEntradaKg
+      if (pesagem.tipo === "ENTRADA" && pesoKg !== pesagem.pesoKg) {
+        await tx.animal.update({
+          where: { id: pesagem.animalId },
+          data: { pesoEntradaKg: pesoKg },
+        });
+      }
 
       // Recalcular a próxima pesagem na cadeia se o peso mudou
       if (pesoKg !== pesagem.pesoKg) {
@@ -155,7 +164,14 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ success: false, error: "Pesagem não encontrada" }, { status: 404 });
     }
 
-    if (pesagem.tipo === "ENTRADA" || pesagem.tipo === "SAIDA") {
+    if (pesagem.tipo === "ENTRADA") {
+      return NextResponse.json(
+        { success: false, error: "Pesagem de entrada não pode ser excluída. Para corrigir o peso, use a opção de edição." },
+        { status: 400 }
+      );
+    }
+
+    if (pesagem.tipo === "SAIDA") {
       return NextResponse.json(
         { success: false, error: `Pesagem do tipo ${pesagem.tipo} não pode ser excluída` },
         { status: 400 }
