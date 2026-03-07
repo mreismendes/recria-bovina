@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
         // Calculate GMD — find the latest pesagem BEFORE this date
         const ultima = await tx.pesagem.findFirst({
-          where: { animalId, dataPesagem: { lt: dataPesagemDate } },
+          where: { animalId, ativo: true, dataPesagem: { lt: dataPesagemDate } },
           orderBy: { dataPesagem: "desc" },
         });
 

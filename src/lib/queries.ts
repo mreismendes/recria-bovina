@@ -75,7 +75,7 @@ export async function contarCabecasAtivasNaData(loteId: string, data: Date): Pro
  */
 export async function getUltimaPesagem(animalId: string) {
   return prisma.pesagem.findFirst({
-    where: { animalId },
+    where: { animalId, ativo: true },
     orderBy: { dataPesagem: "desc" },
   });
 }
@@ -85,7 +85,7 @@ export async function getUltimaPesagem(animalId: string) {
  */
 export async function getPesagensDoAnimal(animalId: string) {
   return prisma.pesagem.findMany({
-    where: { animalId },
+    where: { animalId, ativo: true },
     orderBy: { dataPesagem: "asc" },
   });
 }

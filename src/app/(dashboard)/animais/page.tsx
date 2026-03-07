@@ -15,6 +15,7 @@ export default async function AnimaisPage() {
           include: { lote: { include: { contrato: { select: { nomeFazenda: true } }, grupoContrato: { select: { nome: true } } } } },
         },
         pesagens: {
+          where: { ativo: true },
           orderBy: { dataPesagem: "desc" },
           take: 1,
         },
