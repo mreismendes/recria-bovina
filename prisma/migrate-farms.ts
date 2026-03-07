@@ -86,7 +86,7 @@ async function migrateFarms() {
   let created = 0;
   let linked = 0;
 
-  for (const [, contratos] of farmGroups.entries()) {
+  for (const [, contratos] of Array.from(farmGroups.entries())) {
     const source = contratos[0];
 
     const fazenda = await prisma.fazenda.create({
