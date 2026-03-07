@@ -495,7 +495,8 @@ function Historico({ lotes }: { lotes: Lote[] }) {
 
   const sessoesOrdenadas = Object.entries(sessoes).sort(([a], [b]) => b.localeCompare(a));
 
-  const canEditDelete = (p: PesagemHistorico) => p.tipo === "PERIODICA" && p.ativo !== false;
+  const canEdit = (p: PesagemHistorico) => (p.tipo === "PERIODICA" || p.tipo === "ENTRADA") && p.ativo !== false;
+  const canDelete = (p: PesagemHistorico) => p.tipo === "PERIODICA" && p.ativo !== false;
 
   return (
     <div className="space-y-4">
@@ -623,22 +624,26 @@ function Historico({ lotes }: { lotes: Lote[] }) {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            {canEditDelete(p) && (
+                            {(canEdit(p) || canDelete(p)) && (
                               <div className="flex items-center justify-end gap-1">
-                                <button
-                                  onClick={() => openEdit(p)}
-                                  className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                  title="Editar pesagem"
-                                >
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => openDelete(p)}
-                                  className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                  title="Excluir pesagem"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
+                                {canEdit(p) && (
+                                  <button
+                                    onClick={() => openEdit(p)}
+                                    className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                    title={p.tipo === "ENTRADA" ? "Editar peso de entrada" : "Editar pesagem"}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
+                                {canDelete(p) && (
+                                  <button
+                                    onClick={() => openDelete(p)}
+                                    className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                    title="Excluir pesagem"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
                               </div>
                             )}
                           </TableCell>
@@ -656,12 +661,17 @@ function Historico({ lotes }: { lotes: Lote[] }) {
       <Dialog open={!!editPesagem} onOpenChange={(open) => !open && setEditPesagem(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Pesagem</DialogTitle>
+            <DialogTitle>{editPesagem?.tipo === "ENTRADA" ? "Editar Peso de Entrada" : "Editar Pesagem"}</DialogTitle>
             <DialogDescription>
               {editPesagem && (
                 <>
                   Animal: <span className="font-mono font-semibold text-green-700">{editPesagem.animal.brinco}</span>
                   {" "}— Data: {formatDate(editPesagem.dataPesagem)}
+                  {editPesagem.tipo === "ENTRADA" && (
+                    <span className="block mt-1 text-amber-600">
+                      O peso de entrada do animal também será atualizado.
+                    </span>
+                  )}
                 </>
               )}
             </DialogDescription>
