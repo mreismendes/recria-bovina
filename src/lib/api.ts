@@ -71,7 +71,11 @@ export const animaisApi = {
   get: (id: string) => apiFetch<any>(`/api/animals/${id}`),
   create: (data: unknown) => apiFetch<any>("/api/animals", { method: "POST", body: JSON.stringify(data) }),
   update: (id: string, data: unknown) => apiFetch<any>(`/api/animals/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  remove: (id: string) => apiFetch<any>(`/api/animals/${id}`, { method: "DELETE" }),
+  deleteBatch: (animalIds: string[]) =>
+    apiFetch<{ excluidos: number; bloqueados: { brinco: string; motivo: string }[] }>(
+      "/api/animals/delete",
+      { method: "POST", body: JSON.stringify({ animalIds }) }
+    ),
   movimentar: (data: unknown) => apiFetch<any>("/api/animals/movimentar", { method: "POST", body: JSON.stringify(data) }),
   saida: (data: unknown) => apiFetch<any>("/api/animals/saida", { method: "POST", body: JSON.stringify(data) }),
   estornoSaida: (data: unknown) => apiFetch<any>("/api/animals/estorno-saida", { method: "POST", body: JSON.stringify(data) }),

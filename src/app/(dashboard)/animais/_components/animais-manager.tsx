@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Search, Beef, ArrowRightLeft, LogOut, CheckSquare, Upload, Trash2 } from "lucide-react";
+import { Plus, Pencil, Search, Beef, ArrowRightLeft, LogOut, CheckSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,7 +35,8 @@ type Animal = {
 const today = todayLocalStr();
 
 
-export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Animal[]; lotes: Lote[] }) {
+export function AnimaisManager({ initialAnimais, lotes, userRole }: { initialAnimais: Animal[]; lotes: Lote[]; userRole: string }) {
+  const isAdmin = userRole === "ADMIN";
   const router = useRouter();
   const [items, setItems]         = useState(initialAnimais);
   const [search, setSearch]       = useState("");
@@ -46,7 +47,7 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [movimentacaoOpen, setMovimentacaoOpen] = useState(false);
   const [saidaOpen, setSaidaOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Animal | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const form = useForm<AnimalFormData>({
@@ -147,19 +148,29 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
   const selectedAnimais = items.filter((a) => selectedIds.has(a.id));
   const selectedLoteId = selectedAnimais[0]?.pertinencias.find((p) => !p.dataFim)?.lote.id ?? null;
 
-  async function onDelete() {
-    if (!deleteTarget) return;
+  async function onDeleteBatch() {
+    if (selectedIds.size === 0) return;
     setDeleting(true);
     setError(null);
     try {
-      await animaisApi.remove(deleteTarget.id);
-      setItems(items.filter(i => i.id !== deleteTarget.id));
-      setSelectedIds(prev => { const next = new Set(prev); next.delete(deleteTarget.id); return next; });
-      setDeleteTarget(null);
+      const result = await animaisApi.deleteBatch(Array.from(selectedIds));
+      const deletedIds = new Set(
+        items.filter(i => selectedIds.has(i.id) && !result.bloqueados.some(b => b.brinco === i.brinco)).map(i => i.id)
+      );
+      setItems(items.filter(i => !deletedIds.has(i.id)));
+      setSelectedIds(new Set());
+      setDeleteDialogOpen(false);
+      if (result.bloqueados.length > 0) {
+        setError(
+          `${result.excluidos} animal(is) excluído(s). ` +
+          `${result.bloqueados.length} não pôde(puderam) ser excluído(s): ` +
+          result.bloqueados.map(b => `${b.brinco} (${b.motivo})`).join("; ")
+        );
+      }
       router.refresh();
     } catch (e: any) {
       setError(e.message);
-      setDeleteTarget(null);
+      setDeleteDialogOpen(false);
     } finally {
       setDeleting(false);
     }
@@ -237,6 +248,17 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
               <LogOut className="h-3.5 w-3.5" />
               Registrar Saída
             </Button>
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-red-700 border-red-300 hover:bg-red-50"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Excluir
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -320,14 +342,9 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
                   </TableCell>
                   <TableCell className="text-right font-mono text-sm">{formatCurrency(item.custoAquisicao)}</TableCell>
                   <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
-                        <Pencil className="h-4 w-4 text-gray-500" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(item)}>
-                        <Trash2 className="h-4 w-4 text-red-400 hover:text-red-600" />
-                      </Button>
-                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
+                      <Pencil className="h-4 w-4 text-gray-500" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -557,23 +574,35 @@ export function AnimaisManager({ initialAnimais, lotes }: { initialAnimais: Anim
         onSuccess={() => { setSelectedIds(new Set()); router.refresh(); }}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Excluir animal</DialogTitle>
+            <DialogTitle>Excluir {selectedIds.size} animal(is)</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja excluir o animal <strong className="text-gray-900">{deleteTarget?.brinco}</strong>
-              {deleteTarget?.nome ? ` (${deleteTarget.nome})` : ""}? Esta ação removerá permanentemente o animal,
-              suas pesagens, pertinências de lote e movimentações. Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir permanentemente{" "}
+              {selectedIds.size === 1
+                ? <>o animal <strong className="text-gray-900">{selectedAnimais[0]?.brinco}</strong></>
+                : <><strong className="text-gray-900">{selectedIds.size} animais</strong> selecionados</>
+              }? Serão removidos os registros de pesagens, pertinências de lote e movimentações.
+              Animais com registros financeiros não serão excluídos. Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
+          {selectedIds.size <= 10 && (
+            <div className="text-sm text-gray-600 space-y-0.5">
+              {selectedAnimais.map(a => (
+                <div key={a.id} className="font-mono text-xs">
+                  {a.brinco}{a.nome ? ` — ${a.nome}` : ""}
+                </div>
+              ))}
+            </div>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={onDelete} disabled={deleting}>
-              {deleting ? "Excluindo…" : "Excluir"}
+            <Button variant="destructive" onClick={onDeleteBatch} disabled={deleting}>
+              {deleting ? "Excluindo…" : `Excluir ${selectedIds.size} animal(is)`}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 
 const updateSchema = z.object({
   nome:        z.string().max(100).optional().nullable(),
@@ -50,60 +49,5 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ success: true, data: animal });
   } catch {
     return NextResponse.json({ success: false, error: "Erro ao atualizar animal" }, { status: 500 });
-  }
-}
-
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const animal = await prisma.animal.findUnique({
-      where: { id: params.id },
-      include: {
-        rateiosSuplem: { select: { id: true }, take: 1 },
-        rateiosMed: { select: { id: true }, take: 1 },
-        carencias: { select: { id: true }, take: 1 },
-        saidas: { where: { estornada: false }, select: { id: true }, take: 1 },
-      },
-    });
-
-    if (!animal) {
-      return NextResponse.json({ success: false, error: "Animal não encontrado" }, { status: 404 });
-    }
-
-    // Block deletion if animal has financial records (rateios, carências, saídas ativas)
-    const hasFinancials =
-      animal.rateiosSuplem.length > 0 ||
-      animal.rateiosMed.length > 0 ||
-      animal.carencias.length > 0 ||
-      animal.saidas.length > 0;
-
-    if (hasFinancials) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Animal possui registros financeiros (rateios de suplemento/medicamento, carências ou saídas). " +
-            "Não é possível excluir.",
-        },
-        { status: 409 }
-      );
-    }
-
-    // Atomic delete: movimentações → pesagens → pertinências → animal
-    await prisma.$transaction(async (tx) => {
-      await tx.movimentacao.deleteMany({ where: { animalId: params.id } });
-      await tx.pesagem.deleteMany({ where: { animalId: params.id } });
-      await tx.pertinenciaLote.deleteMany({ where: { animalId: params.id } });
-      await tx.animal.delete({ where: { id: params.id } });
-    });
-
-    return NextResponse.json({ success: true, data: { id: params.id } });
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
-      return NextResponse.json(
-        { success: false, error: "Não é possível excluir: animal possui registros dependentes." },
-        { status: 409 }
-      );
-    }
-    return NextResponse.json({ success: false, error: "Erro ao excluir animal" }, { status: 500 });
   }
 }
