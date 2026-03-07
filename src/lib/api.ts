@@ -54,6 +54,11 @@ export const lotesApi = {
   create: (data: unknown) => apiFetch<any>("/api/lots", { method: "POST", body: JSON.stringify(data) }),
   update: (id: string, data: unknown) => apiFetch<any>(`/api/lots/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   remove: (id: string) => apiFetch<any>(`/api/lots/${id}`, { method: "DELETE" }),
+  move: (data: { loteIds: string[]; contratoId?: string | null; grupoContratoId?: string | null }) =>
+    apiFetch<{ movidos: number; ignorados: number; loteIds: string[] }>("/api/lots/move", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 // ── Produtos ──────────────────────────────────────────────────────────────────

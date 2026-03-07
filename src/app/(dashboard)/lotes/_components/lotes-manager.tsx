@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Trash2, Layers } from "lucide-react";
+import { Plus, Pencil, Trash2, Layers, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { loteSchema, type LoteFormData } from "@/lib/validations";
 import { lotesApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { MoveLoteSheet } from "./move-lote-sheet";
 
 type GrupoRef = { id: string; nome: string };
 type Contrato = { id: string; idContrato: string; nomeFazenda: string };
@@ -44,10 +45,33 @@ export function LotesManager({ initialLotes, contratos, grupos }: { initialLotes
   const [error, setError] = useState<string | null>(null);
   const [parentType, setParentType] = useState<"contrato" | "grupo">("contrato");
 
+  // Selection state for bulk move
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [moveSheetOpen, setMoveSheetOpen] = useState(false);
+
   const form = useForm<LoteFormData>({
     resolver: zodResolver(loteSchema),
     defaultValues: { nome: "", descricao: "", contratoId: null, grupoContratoId: null },
   });
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === items.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(items.map((i) => i.id)));
+    }
+  }
+
+  const selectedLotes = items.filter((i) => selectedIds.has(i.id));
 
   function openCreate() {
     setEditing(null);
@@ -122,19 +146,47 @@ export function LotesManager({ initialLotes, contratos, grupos }: { initialLotes
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-bold text-gray-900">Lotes</h1><p className="text-sm text-gray-500 mt-1">{items.length} lote(s) ativo(s)</p></div>
-        <Button onClick={openCreate} className="gap-2" disabled={!canCreate}><Plus className="h-4 w-4" /> Novo Lote</Button>
+        <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setMoveSheetOpen(true)}
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              Mover {selectedIds.size} lote(s)
+            </Button>
+          )}
+          <Button onClick={openCreate} className="gap-2" disabled={!canCreate}><Plus className="h-4 w-4" /> Novo Lote</Button>
+        </div>
       </div>
       {!canCreate && (<div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-700">Cadastre ao menos um contrato ou grupo antes de criar lotes.</div>)}
       {error && <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-700">{error}</div>}
       <div className="bg-white rounded-lg border shadow-sm">
         <Table>
           <TableHeader><TableRow>
+            <TableHead className="w-10">
+              <input
+                type="checkbox"
+                className="rounded border-gray-300"
+                checked={items.length > 0 && selectedIds.size === items.length}
+                onChange={toggleSelectAll}
+              />
+            </TableHead>
             <TableHead>Nome do Lote</TableHead><TableHead>Tipo</TableHead><TableHead>Contrato / Grupo</TableHead><TableHead>Descrição</TableHead><TableHead className="text-center">Cabeças ativas</TableHead><TableHead className="w-24"></TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {items.length === 0 && (<TableRow><TableCell colSpan={6} className="text-center py-12 text-gray-400"><Layers className="h-10 w-10 mx-auto mb-2 opacity-30" />Nenhum lote cadastrado</TableCell></TableRow>)}
+            {items.length === 0 && (<TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-400"><Layers className="h-10 w-10 mx-auto mb-2 opacity-30" />Nenhum lote cadastrado</TableCell></TableRow>)}
             {items.map(item => (
-              <TableRow key={item.id}>
+              <TableRow key={item.id} className={selectedIds.has(item.id) ? "bg-blue-50" : ""}>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300"
+                    checked={selectedIds.has(item.id)}
+                    onChange={() => toggleSelect(item.id)}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{item.nome}</TableCell>
                 <TableCell className="text-sm">
                   {item.grupoContratoId
@@ -153,6 +205,24 @@ export function LotesManager({ initialLotes, contratos, grupos }: { initialLotes
           </TableBody>
         </Table>
       </div>
+
+      {/* Move Lote Sheet */}
+      <MoveLoteSheet
+        open={moveSheetOpen}
+        onOpenChange={(open) => {
+          setMoveSheetOpen(open);
+          if (!open) setSelectedIds(new Set());
+        }}
+        lotes={selectedLotes}
+        contratos={contratos}
+        grupos={grupos}
+        onSuccess={() => {
+          router.refresh();
+          setSelectedIds(new Set());
+          setMoveSheetOpen(false);
+        }}
+      />
+
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}><SheetContent>
         <SheetHeader><SheetTitle>{editing ? "Editar Lote" : "Novo Lote"}</SheetTitle><SheetDescription>Lotes agrupam animais com perfil similar para gestão.</SheetDescription></SheetHeader>
         <Form {...form}><form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
