@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Scale, TrendingUp, TrendingDown, Minus, ArrowRight, Pencil, Trash2 } from "lucide-react";
@@ -13,6 +14,8 @@ import { pesagensApi } from "@/lib/api";
 import { formatPeso, formatCurrency, formatDate, formatNumber, parseBrNumber, todayLocalStr, numberToBrInput } from "@/lib/utils";
 
 type Lote = { id: string; nome: string; contrato?: { nomeFazenda: string } | null; grupoContrato?: { nome: string } | null };
+type Contrato = { id: string; idContrato: string; nomeFazenda: string };
+type GrupoContrato = { id: string; nome: string };
 type AnimalNoLote = {
   id: string;
   brinco: string;
@@ -52,9 +55,13 @@ const today = todayLocalStr();
 
 export function PesagensManager({
   lotes,
+  contratos,
+  grupoContratos,
   animaisPorLote,
 }: {
   lotes: Lote[];
+  contratos: Contrato[];
+  grupoContratos: GrupoContrato[];
   animaisPorLote: Record<string, AnimalNoLote[]>;
 }) {
   const [tab, setTab] = useState<"nova" | "historico">("nova");
@@ -91,7 +98,7 @@ export function PesagensManager({
       {tab === "nova" && (
         <NovaSessao lotes={lotes} animaisPorLote={animaisPorLote} />
       )}
-      {tab === "historico" && <Historico lotes={lotes} />}
+      {tab === "historico" && <Historico lotes={lotes} contratos={contratos} grupoContratos={grupoContratos} />}
     </div>
   );
 }
@@ -384,8 +391,10 @@ function NovaSessao({
 
 // ── Histórico de Pesagens ─────────────────────────────────────────────────────
 
-function Historico({ lotes }: { lotes: Lote[] }) {
-  const [loteId, setLoteId] = useState("todos");
+function Historico({ lotes, contratos, grupoContratos }: { lotes: Lote[]; contratos: Contrato[]; grupoContratos: GrupoContrato[] }) {
+  const [selectedLoteIds, setSelectedLoteIds] = useState<string[]>([]);
+  const [selectedContratoIds, setSelectedContratoIds] = useState<string[]>([]);
+  const [selectedGrupoContratoIds, setSelectedGrupoContratoIds] = useState<string[]>([]);
   const [pesagens, setPesagens] = useState<PesagemHistorico[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -405,14 +414,16 @@ function Historico({ lotes }: { lotes: Lote[] }) {
 
   useEffect(() => {
     setLoading(true);
-    const params: { loteId?: string; limit?: number; includeDeleted?: boolean } = { limit: 200, includeDeleted: true };
-    if (loteId !== "todos") params.loteId = loteId;
+    const params: { loteIds?: string[]; contratoIds?: string[]; grupoContratoIds?: string[]; limit?: number; includeDeleted?: boolean } = { limit: 200, includeDeleted: true };
+    if (selectedLoteIds.length > 0) params.loteIds = selectedLoteIds;
+    if (selectedContratoIds.length > 0) params.contratoIds = selectedContratoIds;
+    if (selectedGrupoContratoIds.length > 0) params.grupoContratoIds = selectedGrupoContratoIds;
 
     pesagensApi.list(params).then((data) => {
       setPesagens(data);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [loteId, refreshKey]);
+  }, [selectedLoteIds, selectedContratoIds, selectedGrupoContratoIds, refreshKey]);
 
   function reload() {
     setRefreshKey((k) => k + 1);
@@ -500,18 +511,36 @@ function Historico({ lotes }: { lotes: Lote[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3 items-center">
-        <Select value={loteId} onValueChange={setLoteId}>
-          <SelectTrigger className="w-72">
-            <SelectValue placeholder="Filtrar por lote" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os lotes</SelectItem>
-            {lotes.map((l) => (
-              <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap gap-3 items-end">
+        {grupoContratos.length > 0 && (
+          <div className="w-56">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">Grupo de Contrato</label>
+            <MultiSelect
+              options={grupoContratos.map((g) => ({ value: g.id, label: g.nome }))}
+              selected={selectedGrupoContratoIds}
+              onChange={setSelectedGrupoContratoIds}
+              allLabel="Todos os grupos"
+            />
+          </div>
+        )}
+        <div className="w-64">
+          <label className="text-xs font-medium text-gray-500 mb-1 block">Contrato</label>
+          <MultiSelect
+            options={contratos.map((c) => ({ value: c.id, label: `${c.idContrato} — ${c.nomeFazenda}` }))}
+            selected={selectedContratoIds}
+            onChange={setSelectedContratoIds}
+            allLabel="Todos os contratos"
+          />
+        </div>
+        <div className="w-56">
+          <label className="text-xs font-medium text-gray-500 mb-1 block">Lote</label>
+          <MultiSelect
+            options={lotes.map((l) => ({ value: l.id, label: l.nome }))}
+            selected={selectedLoteIds}
+            onChange={setSelectedLoteIds}
+            allLabel="Todos os lotes"
+          />
+        </div>
       </div>
 
       {loading ? (

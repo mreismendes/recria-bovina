@@ -14,24 +14,58 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const loteId = searchParams.get("loteId");
+    const loteIds = searchParams.get("loteIds")?.split(",").filter(Boolean) ?? [];
+    const contratoIds = searchParams.get("contratoIds")?.split(",").filter(Boolean) ?? [];
+    const grupoContratoIds = searchParams.get("grupoContratoIds")?.split(",").filter(Boolean) ?? [];
     const animalId = searchParams.get("animalId");
     const includeDeleted = searchParams.get("includeDeleted") === "true";
     const limit = parseInt(searchParams.get("limit") ?? "100", 10);
+
+    // Resolve all filter dimensions to a unified set of loteIds
+    let resolvedLoteIds: string[] = [...loteIds];
+    if (loteId) resolvedLoteIds.push(loteId);
+
+    // Resolve contratoIds → loteIds
+    if (contratoIds.length > 0) {
+      const lotesFromContratos = await prisma.lote.findMany({
+        where: { contratoId: { in: contratoIds }, ativo: true },
+        select: { id: true },
+      });
+      resolvedLoteIds.push(...lotesFromContratos.map((l) => l.id));
+    }
+
+    // Resolve grupoContratoIds → loteIds (both direct and via contratos)
+    if (grupoContratoIds.length > 0) {
+      const lotesFromGrupos = await prisma.lote.findMany({
+        where: {
+          ativo: true,
+          OR: [
+            { grupoContratoId: { in: grupoContratoIds } },
+            { contrato: { grupoContratoId: { in: grupoContratoIds } } },
+          ],
+        },
+        select: { id: true },
+      });
+      resolvedLoteIds.push(...lotesFromGrupos.map((l) => l.id));
+    }
+
+    // Deduplicate
+    resolvedLoteIds = Array.from(new Set(resolvedLoteIds));
+
+    const hasLoteFilter = resolvedLoteIds.length > 0;
 
     // When filtering by lot, we need to find weighings where the animal
     // belonged to this lot on the weighing date (event-time), not current membership.
     let pesagens;
 
-    if (loteId) {
-      // Use raw query approach: find all pertinências for this lot,
-      // then match weighings that fall within those intervals
+    if (hasLoteFilter) {
       pesagens = await prisma.pesagem.findMany({
         where: {
           ...(animalId && { animalId }),
           ...(!includeDeleted && { ativo: true }),
           animal: {
             pertinencias: {
-              some: { loteId },
+              some: { loteId: { in: resolvedLoteIds } },
             },
           },
         },
@@ -43,7 +77,7 @@ export async function GET(req: NextRequest) {
               nome: true,
               pesoEntradaKg: true,
               pertinencias: {
-                where: { loteId },
+                where: { loteId: { in: resolvedLoteIds } },
                 select: { dataInicio: true, dataFim: true },
               },
             },
@@ -54,7 +88,7 @@ export async function GET(req: NextRequest) {
       });
 
       // Post-filter: keep only weighings where dataPesagem falls within
-      // a pertinência interval for this lot
+      // a pertinência interval for one of the selected lots
       pesagens = pesagens.filter((p) => {
         return p.animal.pertinencias.some((pert) => {
           const afterStart = p.dataPesagem >= pert.dataInicio;

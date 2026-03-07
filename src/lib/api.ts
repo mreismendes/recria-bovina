@@ -98,9 +98,12 @@ export const animaisApi = {
 // ── Pesagens ─────────────────────────────────────────────────────────────────
 
 export const pesagensApi = {
-  list: (params?: { loteId?: string; animalId?: string; limit?: number; includeDeleted?: boolean }) => {
+  list: (params?: { loteId?: string; loteIds?: string[]; contratoIds?: string[]; grupoContratoIds?: string[]; animalId?: string; limit?: number; includeDeleted?: boolean }) => {
     const qs = new URLSearchParams();
     if (params?.loteId) qs.set("loteId", params.loteId);
+    if (params?.loteIds?.length) qs.set("loteIds", params.loteIds.join(","));
+    if (params?.contratoIds?.length) qs.set("contratoIds", params.contratoIds.join(","));
+    if (params?.grupoContratoIds?.length) qs.set("grupoContratoIds", params.grupoContratoIds.join(","));
     if (params?.animalId) qs.set("animalId", params.animalId);
     if (params?.limit) qs.set("limit", String(params.limit));
     if (params?.includeDeleted) qs.set("includeDeleted", "true");
