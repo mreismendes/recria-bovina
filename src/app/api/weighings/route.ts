@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Deduplicate
-    resolvedLoteIds = [...new Set(resolvedLoteIds)];
+    resolvedLoteIds = Array.from(new Set(resolvedLoteIds));
 
     const hasLoteFilter = resolvedLoteIds.length > 0;
 
